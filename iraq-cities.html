@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>All Cities of Iraq | Comprehensive Explorer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Merriweather:wght@300;400;700;900&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Merriweather', 'serif'],
+                    },
+                    colors: {
+                        primary: '#047857',
+                        secondary: '#064e3b',
+                        surface: '#f8fafc',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .fade-in { animation: fadeIn 0.4s ease-in-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        html, body { height: 100%; overflow: hidden; }
+    </style>
+</head>
+<body class="bg-surface text-slate-800 flex flex-col md:flex-row font-sans w-full h-full">
+
+    <nav class="w-full md:w-80 bg-white border-r border-slate-200 flex flex-col h-1/3 md:h-full z-10 shadow-sm flex-shrink-0">
+        <div class="p-5 bg-secondary text-white shrink-0">
+            <h1 class="text-2xl font-bold tracking-tight">Iraq Archives</h1>
+            <p class="text-emerald-100 text-xs mt-1">18 Governorates • Comprehensive Data</p>
+            <div class="mt-4 relative">
+                <input type="text" id="search-input" placeholder="Search cities..." class="w-full pl-10 pr-4 py-2 rounded-lg bg-emerald-800/50 border border-emerald-700 text-white placeholder-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-400 text-sm">
+                <svg class="w-5 h-5 absolute left-3 top-2.5 text-emerald-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            </div>
+        </div>
+        <div class="flex-1 overflow-y-auto no-scrollbar p-3 space-y-2" id="city-list"></div>
+    </nav>
+
+    <main class="flex-1 h-2/3 md:h-full overflow-y-auto relative bg-surface" id="main-scroll">
+        <div class="max-w-4xl mx-auto p-6 md:p-12 lg:p-16 pb-24" id="content-area">
+            <div class="flex flex-col items-center justify-center h-full text-center mt-10 md:mt-32 fade-in">
+                <svg class="w-20 h-20 text-emerald-600 mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path></svg>
+                <h2 class="text-3xl font-bold text-slate-800 mb-3">Explore All 18 Provinces</h2>
+                <p class="text-slate-500 max-w-md mx-auto text-base">Select any provincial capital from the directory to read exhaustive geographical, historical, and political analyses tailored to each region of Iraq.</p>
+                <a href="https://book.fabletour.com/book-tour.html" target="_blank" class="mt-8 inline-block bg-emerald-600 text-white font-bold text-base px-8 py-4 rounded-full hover:bg-emerald-700 transition shadow-lg">Book Your Iraq Tour</a>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const citiesData = [
+            {
+                id: "baghdad", name: "Baghdad", subtitle: "The Capital and City of Peace",
+                geography: ["Baghdad is the capital and largest city of Iraq, strategically positioned along the banks of the Tigris River, which bisects the city into two main halves: Karkh on the western bank and Rusafa on the eastern bank. Geographically, it sits on a vast, fertile alluvial plain in central Iraq. The city's topography is overwhelmingly flat, which historically made it an ideal location for a sprawling urban center, extensive agricultural development, and massive architectural projects.","The climate is notoriously arid and subtropical, featuring extremely hot, prolonged summers where temperatures frequently soar above 50°C (122°F), and brief, mild winters. The Tigris provides the absolute lifeblood for the city's water supply and surrounding agriculture. However, water levels have fluctuated dangerously in modern times due to upstream damming in neighboring Turkey and Iran, as well as severe climate change, posing an ongoing geographic and ecological crisis for the capital's booming population of over 8 million residents."],
+                history: ["The historical legacy of Baghdad is profoundly rich and globally significant. Founded in 762 AD by the Abbasid Caliph Al-Mansur, the city was meticulously planned as a massive circular fortress. It quickly evolved into the capital of the Islamic Empire and became the undisputed epicenter of the Islamic Golden Age. It housed the legendary Bayt al-Hikmah (House of Wisdom), where scholars of various ethnicities and religions gathered to translate ancient Greek, Persian, and Indian texts into Arabic, preserving global knowledge.","Baghdad was arguably the largest and most advanced city in the world during the 9th and 10th centuries. However, this golden era ended abruptly and violently with the Mongol invasion led by Hulagu Khan in 1258, which destroyed the city, massacred its inhabitants, and ruined its vast libraries—legend says the Tigris ran black with ink and red with blood.","Following World War I, the British captured the city, making it the capital of the British Mandate of Iraq, and later the independent Kingdom of Iraq in 1932. In modern times, Baghdad has witnessed the tumultuous rise and fall of the Ba'ath party, the devastating Iran-Iraq War, the 1991 Gulf War, and the 2003 US-led invasion which finally toppled Saddam Hussein."],
+                politics: ["Politically, Baghdad is the undisputed nerve center of the modern Iraqi state. It is home to the federal government, the Council of Representatives (Parliament), the Presidency, and the heavily fortified International Zone (Green Zone), which houses crucial government buildings and foreign embassies.","Today, Baghdad remains a volatile microcosm of Iraq's complex dynamics, balancing the interests of Shia, Sunni, and Kurdish political factions within a fragile federal quota system known as 'Muhasasa'. It is the primary stage for national protests, most notably the Tishreen movement that began in October 2019."]
+            },
+            {
+                id: "basra", name: "Basra", subtitle: "The Economic Lungs of the South",
+                geography: ["Basra is the premier port city of southern Iraq, situated along the banks of the Shatt al-Arab waterway—a massive river formed by the confluence of the Tigris and Euphrates rivers. Located approximately 55 kilometers from the Persian Gulf, Basra shares close maritime and land borders with Iran to the east and Kuwait to the south.","The climate in Basra is considered extreme even by Middle Eastern standards; it is consistently one of the hottest cities globally, with blistering summer heat compounded by oppressive, heavy humidity rolling in from the Gulf."],
+                history: ["Founded in 636 AD by the Rashidun Caliph Umar as a military encampment, Basra quickly flourished into one of the most vital cultural, commercial, and intellectual hubs of the early Islamic world. It was a primary cradle of Arabic grammar, theology, and literature.","Throughout the centuries, Basra frequently changed hands, falling to the Mongols, briefly to Portuguese naval forces, and eventually becoming an important vilayet of the Ottoman Empire. During the late 20th and early 21st centuries, Basra suffered immeasurably due to its border location during the Iran-Iraq War and the 2003 invasion."],
+                politics: ["Basra is universally described as the financial lung of Iraq. The governorate possesses the overwhelming majority of Iraq's vast proven oil wealth—including the super-giant Rumaila, Majnoon, and Zubair oil fields—making it entirely indispensable to the national economy.","Despite generating over 80% of the national budget, Basrawis have long felt politically marginalized, ecologically poisoned, and economically neglected by the central government in Baghdad, sparking recurrent massive protests in 2018."]
+            },
+            {
+                id: "mosul", name: "Mosul", subtitle: "The Mother of Two Springs",
+                geography: ["Mosul, the capital of Nineveh Governorate, is situated in the north along the banks of the Tigris River. The river physically divides the city into the 'Left Bank' (modern eastern side) and the 'Right Bank' (historical western side containing the ancient Old City).","The climate in Mosul is semi-arid but benefits from cooler temperatures and more rainfall than central Iraq, earning it the famous nickname 'Umm al-Rabi'ain' (The Mother of Two Springs)."],
+                history: ["The historical roots of Mosul are deeply entwined with the ancient world. The eastern half encompasses the ruins of Nineveh, once the capital of the mighty Neo-Assyrian Empire and arguably the largest city in the world around 700 BC.","Tragically, in recent modern history, Mosul was captured by ISIS in 2014. The brutal nine-month Battle of Mosul (2016-2017) eventually liberated the city but left the historic Right Bank in apocalyptic ruins, destroying centuries-old landmarks like the leaning Al-Hadba minaret."],
+                politics: ["Politically, Mosul is one of the most complex and sensitive areas in Iraq. Historically a stronghold of Sunni Arab political power, the city's broader governorate demographics are remarkably diverse, encompassing Kurds, Turkmen, Assyrian Christians, Yazidis, and Shabaks.","The city continues to struggle with administrative corruption, the heavy presence of various PMF militias, and the monumental challenge of reintegrating populations displaced by conflict."]
+            },
+            {
+                id: "erbil", name: "Erbil", subtitle: "Ancient Citadel and Kurdish Capital",
+                geography: ["Erbil, locally known as Hawler, is the capital of the Kurdistan Region of Iraq, situated on a broad fertile plain between the Greater and Lesser Zab rivers, surrounded by the Zagros Mountains.","This advantageous topographical setting provides Erbil with a rich agricultural hinterland. The climate is distinctly Mediterranean, experiencing hot dry summers and cool wet winters with occasional snowfall in the surrounding mountains."],
+                history: ["Erbil boasts one of the oldest continuously inhabited histories in the entire world, with evidence of human settlement dating back to at least the 5th millennium BC. The magnificent Erbil Citadel, a UNESCO World Heritage site, physically embodies this ancient legacy.","In modern history, Erbil became the epicenter of the Kurdish nationalist movement. Following severe repression by the Ba'athist regime, including the horrific Anfal genocide, the city found sanctuary under the 1991 US-led no-fly zone."],
+                politics: ["Politically, Erbil is the seat of power for the Kurdistan Regional Government (KRG) and hosts the Kurdistan Parliament. The political landscape is heavily dominated by the Kurdistan Democratic Party (KDP), led by the influential Barzani family.","Erbil's national significance lies in its role as primary interlocutor with Baghdad regarding complex constitutional issues: budget sharing, independent oil exports, and the status of disputed territories like Kirkuk."]
+            },
+            {
+                id: "najaf", name: "Najaf", subtitle: "The Spiritual Capital of Shia Islam",
+                geography: ["Najaf is located in south-central Iraq, roughly 160 kilometers south of Baghdad, situated on a high desert ridge sloping toward the Euphrates River valley. The city is home to Wadi-us-Salaam (Valley of Peace), officially the largest cemetery in the world, covering over 1,480 acres.","The climate is extremely arid, characterized by scorching dry summers and cool winters, with frequent intense dust storms sweeping in from the western desert."],
+                history: ["The history of Najaf is inextricably linked to Shia Islam. Founded in 791 AD by Caliph Harun al-Rashid, who built the first shrine over the tomb of Ali ibn Abi Talib, Najaf transformed from a desert settlement into a major international pilgrimage destination.","In the 20th century, Najaf was a hotbed of anti-colonial resistance, launching the massive 1920 Iraqi Revolt against the British. Under Saddam Hussein, religious scholars faced brutal repression, particularly following the failed 1991 uprisings."],
+                politics: ["Today, Najaf is the spiritual capital of Iraqi Shia Muslims and home to the Marja'iya, currently embodied by Grand Ayatollah Ali al-Sistani. While advocating a 'quietist' approach, its political influence over the Iraqi populace is virtually absolute.","A single fatwa from Najaf can alter the entire course of the nation, demonstrated in 2014 when Sistani's call to arms created the Popular Mobilization Forces (PMF) to defeat ISIS."]
+            },
+            {
+                id: "karbala", name: "Karbala", subtitle: "The City of the Holy Shrines",
+                geography: ["Karbala is situated in central Iraq, approximately 100 kilometers southwest of Baghdad, on the very edge of the Syrian Desert, slightly west of the Euphrates River.","The city's geographic location has always made it a vital gateway between the settled river valleys of Mesopotamia and the nomadic tribal territories of the Arabian desert."],
+                history: ["Karbala's history is defined by the Battle of Karbala in 680 AD, where Imam Hussein ibn Ali was massacred by the army of Umayyad Caliph Yazid I. This martyrdom solidified the great schism between Sunni and Shia Islam.","In 1991, Karbala was a primary center of the massive popular uprising against Saddam Hussein. The regime's Republican Guard brutally crushed the rebellion, damaging the holy shrines with artillery fire and executing thousands of residents."],
+                politics: ["Politically and economically, Karbala is driven by religious tourism. The city hosts the Arba'een pilgrimage, recognized as the largest peaceful annual gathering in the world, drawing 20-25 million pilgrims.","During the 2019 Tishreen protests, Karbala saw some of the most intense anti-government demonstrations, resulting in the assassination of several prominent local activists."]
+            },
+            {
+                id: "kirkuk", name: "Kirkuk", subtitle: "The City of Black Gold and Fire",
+                geography: ["Kirkuk is located in northern Iraq, roughly 240 kilometers north of Baghdad, acting as a critical geographic bridge between the mountainous Kurdistan Region and the central Arab plains.","The defining geographic feature of Kirkuk is what lies beneath it: some of the oldest, largest, and most accessible oil reserves in the world. The famous Baba Gurgur is a perpetual natural gas fire that has burned continuously for millennia."],
+                history: ["Kirkuk's history is ancient and remarkably diverse, built upon the ruins of the ancient Hurrian and Assyrian capital of Arrapha. The modern history of the city was violently altered by the discovery of oil in 1927.","Under the Ba'athist regime, Kirkuk was subjected to a brutal campaign of 'Arabization'. Hundreds of thousands of Kurds and Turkmen were forcibly expelled, replaced by Arab families brought from southern Iraq to secure demographic control."],
+                politics: ["Politically, Kirkuk is arguably the most fiercely contested city in Iraq, referred to as a 'ticking time bomb'. It is the epicenter of the 'Disputed Territories' claimed by both Baghdad and the KRG.","Following the controversial Kurdish independence referendum in 2017, federal forces retook Kirkuk. The struggle for Kirkuk is a high-stakes battle for control over immense oil revenues."]
+            },
+            {
+                id: "sulaymaniyah", name: "Sulaymaniyah", subtitle: "The Paris of Iraq",
+                geography: ["Sulaymaniyah is situated in the eastern part of the Kurdistan Region, nestled within a fertile valley surrounded by mountains including Mount Azmar, Mount Goizha, and Mount Piramagrun.","The climate is significantly cooler and wetter than the rest of Iraq, experiencing cold snowy winters and manageable summers, making it a popular tourist destination."],
+                history: ["Unlike many ancient Iraqi cities, Sulaymaniyah is relatively modern, deliberately founded in 1784 by Ibrahim Pasha Baban. It quickly evolved into the intellectual and cultural heart of the Kurdish people.","Throughout the late 20th century, the city suffered immensely under Ba'athist rule, enduring bombardments and the nearby horrors of the Halabja chemical attack in 1988."],
+                politics: ["Sulaymaniyah is the absolute stronghold of the Patriotic Union of Kurdistan (PUK), maintaining notably closer ties with Iran than the KDP-controlled Erbil.","The city is widely renowned as the most liberal and culturally open urban center in Iraq, frequently dubbed the 'Paris of Iraq' due to its vibrant cafe culture, universities, and flourishing arts scene."]
+            },
+            {
+                id: "duhok", name: "Duhok", subtitle: "The Northern Gateway",
+                geography: ["Duhok is the northernmost major city in Iraq, nestled in a deep strategic valley enclosed by the imposing Zagros mountain ranges. The governorate shares critical international borders with both Turkey to the north and Syria to the west.","The landscape features spectacular rugged terrain, deep river gorges, and fertile valleys. Cold heavy-snow winters block mountain passes while hot dry summers draw tourists to mountain resorts."],
+                history: ["Duhok's history is ancient, with the region serving as a vital thoroughfare since the Assyrian Empire. Remarkable ancient rock carvings at Bavian and Maltai dot the surrounding mountainsides.","Following the 2014 Yezidi genocide committed by ISIS in the nearby Sinjar region, Duhok transformed into the largest hub for Internally Displaced Persons and Syrian refugees in the entire country."],
+                politics: ["Politically, Duhok is a deeply entrenched stronghold of the Kurdistan Democratic Party (KDP). The city's economic lifeblood depends on the Ibrahim Khalil border crossing with Turkey, one of the most lucrative commercial arteries in Iraq.","The region is continually caught in crossfire between Turkish Armed Forces and PKK guerrillas who operate in the mountains, with Turkish military bases and frequent drone strikes a daily reality."]
+            },
+            {
+                id: "ramadi", name: "Ramadi", subtitle: "Heart of the Sunni West",
+                geography: ["Ramadi is the capital of the vast Al Anbar Governorate—the largest province in Iraq, encompassing roughly one-third of the country's total landmass—situated along the banks of the Euphrates River, approximately 110 kilometers west of Baghdad.","The topography is extremely flat and arid. The climate features some of the highest summer temperatures in the country and frequent blinding sandstorms."],
+                history: ["Ramadi was established by the Ottoman Empire in 1869 as a fortified outpost. Following the 2003 US invasion, the city became the absolute epicenter of the fierce Sunni insurgency and is where the famous 'Anbar Awakening' movement was formed.","Tragically, ISIS captured Ramadi in May 2015. The subsequent military campaign involved massive coalition airstrikes that leveled up to 80% of the city's infrastructure."],
+                politics: ["Politically, Ramadi is the unquestioned capital of Sunni Arab politics in Iraq. The political landscape is dominated not by traditional parties, but by powerful, deeply entrenched tribal confederations, most notably the Dulaim.","Ramadi also manages the critical border crossings with Jordan (Trebil) and Syria (Al-Waleed), making it a vital node for international trade and geopolitical security in the Middle East."]
+            },
+            {
+                id: "nasiriyah", name: "Nasiriyah", subtitle: "The City of Ur and Rebellion",
+                geography: ["Nasiriyah is the capital of the Dhi Qar Governorate in southern Iraq, situated along the Euphrates River. Just outside its borders lie the majestic ruins of the ancient Sumerian city of Ur, featuring its towering Ziggurat.","To the east lies the expansive Mesopotamian Marshes (Ahwar), a unique UNESCO-recognized aquatic ecosystem of reed beds and waterways. This dual geography of harsh desert and lush marshland defines the region."],
+                history: ["Nasiriyah is the closest modern city to ancient Ur, famously known as the birthplace of the biblical Patriarch Abraham and a center of early human civilization and writing.","The city became the beating heart and intellectual engine of the 2019 Tishreen protest movement. Al-Haboubi Square transformed into a massive revolutionary encampment where protesters faced extreme violence from security forces."],
+                politics: ["Politically, Nasiriyah is the most volatile and fiercely independent Shia-majority city in Iraq. While it possesses vast oil reserves and immense tourism potential, the city suffers from crushing poverty and massive youth unemployment.","Today, the political situation remains incredibly tense. The central government frequently struggles to maintain control over the governorate, often forced to replace local governors to appease the street."]
+            },
+            {
+                id: "amarah", name: "Amarah", subtitle: "The Jewel of the Marshes",
+                geography: ["Amarah is the capital of the Maysan Governorate in southeastern Iraq, situated directly on the banks of the Tigris River, close to the Iranian border, deeply integrated with the surrounding Mesopotamian Marshes.","The climate is severely hot and humid, heavily influenced by the evaporating waters of the surrounding marshes. Currently, severe drought and upstream damming in Iran are causing an existential geographic crisis."],
+                history: ["Amarah was established in the 1860s as a military outpost by the Ottoman Empire. The region suffered catastrophically during the 1980-1988 Iran-Iraq War, subjected to near-constant artillery bombardment.","Following the 1991 Gulf War, the Ba'athist regime initiated a massive engineering project to divert the Tigris and drain the marshes completely, destroying the local ecosystem and forcing the indigenous Marsh Arabs into exile."],
+                politics: ["Politically, Amarah is a deeply conservative tribal Shia-dominated city and an absolute stronghold for the Sadrist Movement. Tribal law is exceptionally powerful here, often completely superseding formal state law.","Despite proximity to significant oil fields, Maysan remains one of the poorest and least developed governorates in Iraq. Political protests frequently erupt over the lack of basic services and the catastrophic water crisis."]
+            },
+            {
+                id: "kut", name: "Kut", subtitle: "The City of the River Bend",
+                geography: ["Kut is the capital of the Wasit Governorate, famously situated within a massive 'U-shaped' bend of the Tigris River, which physically wraps around the historic city center on three sides.","The Kut Barrage, a massive dam built across the Tigris in the 1930s, is essential to Iraq's geography, controlling water flow to the Gharraf River irrigation canal that waters agricultural plains to the south."],
+                history: ["Kut is most globally famous for the Siege of Kut during World War I. In 1916, after a brutal five-month siege, British General Townshend surrendered his entire force of over 13,000 men to Ottoman forces—the largest surrender of British troops in history up to that point.","In the modern era, Kut developed into a major agricultural and administrative center, suffering heavy repression during the Ba'athist era and significant unrest during the Mahdi Army uprisings in 2004."],
+                politics: ["The central political and economic issue in Kut revolves almost entirely around water management and agriculture. Severe droughts and upstream water policies in Turkey and Iran have decimated crop yields, leading to widespread economic hardship.","Citizens regularly demonstrate over the lack of public sector jobs, failing electricity infrastructure during 50°C summers, and corrupt administrative practices."]
+            },
+            {
+                id: "hilla", name: "Hilla", subtitle: "The Heir to Babylon",
+                geography: ["Hilla is the capital of the Babil (Babylon) Governorate in central Iraq, situated directly on the Hilla branch of the Euphrates River, surrounded by dense date palm groves and highly fertile farmland.","The most significant feature of the region lies just 5 kilometers north of the modern city: the sprawling, monumental archaeological ruins of the ancient city of Babylon."],
+                history: ["Hilla's history is forever shadowed by its proximity to Babylon, the legendary capital of the Babylonian Empire, seat of King Hammurabi and Nebuchadnezzar II.","In recent history, the surrounding Babil governorate was the site of horrific massacres under Saddam. Mahawil contains one of the largest mass graves ever discovered in Iraq, holding thousands of Shia citizens executed by the Republican Guard."],
+                politics: ["Despite hosting the ruins of Babylon—a UNESCO World Heritage site—the local tourism infrastructure is virtually non-existent due to decades of war, mismanagement, and severe federal neglect.","Local politics are frequently consumed by disputes over agricultural water rights from the Euphrates, chronic unemployment, and deeply entrenched corruption within the provincial council."]
+            },
+            {
+                id: "diwaniyah", name: "Diwaniyah", subtitle: "The Agricultural Heart",
+                geography: ["Diwaniyah is the capital of Al-Qādisiyyah Governorate in south-central Iraq, built along the banks of the Al-Diwaniyah River, a major branch of the lower Euphrates.","The surrounding governorate is one of the most intensely agricultural regions in Iraq, dominated by vast flat fields of wheat, barley, and the uniquely fragrant amber rice."],
+                history: ["Diwaniyah developed during the 18th and 19th centuries as a minor Ottoman administrative center. Throughout the late 19th and early 20th centuries, its history was characterized by near-constant tribal rebellion against central authority.","The region was a major stronghold for the 1920 Iraqi Revolt against the British mandate, with local tribes fiercely resisting taxation and external control."],
+                politics: ["Diwaniyah is consistently ranked as one of the most impoverished cities in Iraq, despite its agricultural wealth. Because Al-Qādisiyyah has zero significant oil reserves and no major religious shrines, it receives very little attention from Baghdad.","The city's politics are defined by an existential agricultural crisis. Severe water shortages driven by climate change have devastated the local farming economy, making Diwaniyah a frequent flashpoint for desperate protests."]
+            },
+            {
+                id: "baqubah", name: "Baqubah", subtitle: "The City of Orange Groves",
+                geography: ["Baqubah is the capital of Diyala Governorate, located roughly 50 kilometers northeast of Baghdad, sitting directly on the banks of the Diyala River. It is nationally famous for its vast dense orchards of oranges, pomegranates, and dates.","However, Baqubah's geography places it dangerously on the demographic fault lines between the Arab plains and Kurdish foothills, directly adjacent to the Iranian border."],
+                history: ["Baqubah served as a critical waystation on the ancient Silk Road. Tragically, following the 2003 invasion, it became the absolute ground zero for the Iraqi insurgency. By 2006, it was declared the official capital of the 'Islamic State of Iraq' by Abu Musab al-Zarqawi.","The city was subjected to apocalyptic violence, kidnappings, and ethnic cleansing. The famous orange groves were frequently burned down or used as insurgent hiding places."],
+                politics: ["Politically, Baqubah represents a highly volatile microcosm of Iraq's deepest ethno-sectarian divides. The population is a deeply fractured mix of Sunni Arabs, Shia Arabs, and Kurds.","Baqubah is facing a catastrophic environmental crisis. Iranian dam-building projects have completely cut off water flow to the Diyala River in recent summers, destroying ancient orange groves and devastating the agricultural economy."]
+            },
+            {
+                id: "tikrit", name: "Tikrit", subtitle: "The City of Saladin",
+                geography: ["Tikrit is the capital of Saladin (Salah al-Din) Governorate, built atop high steep cliffs overlooking the western banks of the Tigris River. This elevated topography historically provided excellent natural defenses and control over river traffic.","The city sits squarely within the 'Sunni Triangle', an arid, historically conservative region characterized by rolling plains and desert terrain."],
+                history: ["Tikrit is globally famous as the birthplace of Saladin (Salah ad-Din al-Ayyubi), the legendary Kurdish Muslim commander who recaptured Jerusalem from the Crusaders in 1187.","In June 2014, ISIS committed the horrific Camp Speicher massacre near Tikrit, executing roughly 1,700 unarmed Shia Iraqi Air Force cadets. Tikrit was liberated in 2015 after a massive, destructive siege."],
+                politics: ["Politically, Tikrit is struggling to navigate a deeply complex post-conflict reality. Once the absolute center of power in Ba'athist Iraq, it is now a politically marginalized Sunni city.","The defining local challenge is tribal reconciliation. The Camp Speicher massacre created immense rifts, as some local tribes were accused of collaborating with ISIS. Brokering peace between tribes dictates the security landscape."]
+            },
+            {
+                id: "samawah", name: "Samawah", subtitle: "The Edge of the Desert",
+                geography: ["Samawah is the capital of Al Muthanna Governorate in deep southern Iraq, located on the banks of the Euphrates, its population entirely clustered along the thin ribbon of green provided by the river.","Al Muthanna is the second-largest province in Iraq, yet the vast majority is uninhabitable barren desert stretching toward the Saudi Arabian border."],
+                history: ["Samawah's location at the edge of the desert made it an essential trading post between settled agriculturalists and powerful nomadic Bedouin tribes. The regime constructed massive political prisons in the deep desert, such as the Salman prison, where thousands of Kurds and dissidents perished.","Following the 2003 US invasion, Samawah hosted the Japanese Self-Defense Forces (JSDF), who engaged in a highly successful non-combat humanitarian mission."],
+                politics: ["Samawah and Al Muthanna consistently rank as the absolute poorest region in all of Iraq. It has no significant oil production and relies almost entirely on subsistence agriculture, which is currently failing due to extreme drought.","Because of extreme economic desperation, Samawah is frequently a flashpoint for massive violent protests. Unemployed youth regularly block vital north-south highway and railway lines, demanding jobs and basic services."]
+            }
+        ];
+
+        const icons = {
+            geography: `<svg class="w-6 h-6 mr-3 text-emerald-600 shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`,
+            history: `<svg class="w-6 h-6 mr-3 text-emerald-600 shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`,
+            politics: `<svg class="w-6 h-6 mr-3 text-emerald-600 shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>`
+        };
+
+        let currentActiveBtn = null;
+
+        function init() {
+            renderList(citiesData);
+            document.getElementById('search-input').addEventListener('input', (e) => {
+                const term = e.target.value.toLowerCase();
+                const filtered = citiesData.filter(city =>
+                    city.name.toLowerCase().includes(term) ||
+                    city.subtitle.toLowerCase().includes(term)
+                );
+                renderList(filtered);
+            });
+        }
+
+        function renderList(data) {
+            const listContainer = document.getElementById('city-list');
+            listContainer.innerHTML = '';
+            if(data.length === 0) {
+                listContainer.innerHTML = '<p class="text-slate-400 text-center text-sm mt-4">No cities found.</p>';
+                return;
+            }
+            data.forEach(city => {
+                const btn = document.createElement('button');
+                btn.className = 'w-full text-left px-4 py-3 rounded-xl border border-slate-200 bg-white hover:bg-emerald-50 transition-all duration-200 flex flex-col focus:outline-none focus:ring-2 focus:ring-emerald-500';
+                if(currentActiveBtn && currentActiveBtn.dataset.id === city.id) {
+                    btn.classList.add('bg-emerald-600', 'text-white', 'border-emerald-700', 'shadow-md');
+                    btn.classList.remove('bg-white', 'border-slate-200');
+                    btn.innerHTML = `<span class="font-bold text-white text-base md:text-lg">${city.name}</span><span class="text-xs text-emerald-100 mt-0.5 line-clamp-1">${city.subtitle}</span>`;
+                    currentActiveBtn = btn;
+                } else {
+                    btn.innerHTML = `<span class="font-bold text-slate-800 text-base md:text-lg">${city.name}</span><span class="text-xs text-slate-500 mt-0.5 line-clamp-1">${city.subtitle}</span>`;
+                }
+                btn.dataset.id = city.id;
+                btn.onclick = () => renderCity(city, btn);
+                listContainer.appendChild(btn);
+            });
+        }
+
+        function renderCity(city, btnElement) {
+            if (currentActiveBtn) {
+                currentActiveBtn.classList.remove('bg-emerald-600', 'border-emerald-700', 'shadow-md');
+                currentActiveBtn.classList.add('bg-white', 'border-slate-200');
+                currentActiveBtn.querySelector('span:first-child').classList.remove('text-white');
+                currentActiveBtn.querySelector('span:first-child').classList.add('text-slate-800');
+                currentActiveBtn.querySelector('span:last-child').classList.remove('text-emerald-100');
+                currentActiveBtn.querySelector('span:last-child').classList.add('text-slate-500');
+            }
+            btnElement.classList.remove('bg-white', 'border-slate-200', 'hover:bg-emerald-50');
+            btnElement.classList.add('bg-emerald-600', 'border-emerald-700', 'shadow-md');
+            btnElement.querySelector('span:first-child').classList.remove('text-slate-800');
+            btnElement.querySelector('span:first-child').classList.add('text-white');
+            btnElement.querySelector('span:last-child').classList.remove('text-slate-500');
+            btnElement.querySelector('span:last-child').classList.add('text-emerald-100');
+            currentActiveBtn = btnElement;
+
+            const generateParagraphs = (paragraphs) => paragraphs.map(p => `<p class="mb-4 text-base md:text-lg leading-relaxed text-slate-700 font-serif text-justify">${p}</p>`).join('');
+
+            const contentArea = document.getElementById('content-area');
+            contentArea.classList.remove('fade-in');
+            void contentArea.offsetWidth;
+            contentArea.innerHTML = `
+                <div class="mb-8 md:mb-10 pb-6 border-b border-slate-200">
+                    <h2 class="text-3xl md:text-5xl font-extrabold text-slate-900 tracking-tight mb-2 md:mb-3">${city.name}</h2>
+                    <p class="text-lg md:text-xl text-emerald-600 font-medium">${city.subtitle}</p>
+                </div>
+                <div class="space-y-10 md:space-y-12">
+                    <section>
+                        <div class="flex items-start mb-3 md:mb-4">${icons.geography}<h3 class="text-xl md:text-2xl font-bold text-slate-800">Geographical Context</h3></div>
+                        <div class="pl-0 md:pl-9">${generateParagraphs(city.geography)}</div>
+                    </section>
+                    <section>
+                        <div class="flex items-start mb-3 md:mb-4">${icons.history}<h3 class="text-xl md:text-2xl font-bold text-slate-800">Historical Legacy</h3></div>
+                        <div class="pl-0 md:pl-9">${generateParagraphs(city.history)}</div>
+                    </section>
+                    <section>
+                        <div class="flex items-start mb-3 md:mb-4">${icons.politics}<h3 class="text-xl md:text-2xl font-bold text-slate-800">Political Landscape</h3></div>
+                        <div class="pl-0 md:pl-9">${generateParagraphs(city.politics)}</div>
+                    </section>
+                </div>
+                <div class="mt-12 pt-8 border-t border-slate-200 text-center">
+                    <p class="text-slate-500 mb-4">Experience ${city.name} in person on our 7-Day Iraq Heritage Tour</p>
+                    <a href="https://book.fabletour.com/book-tour.html" target="_blank" class="inline-block bg-emerald-600 text-white font-bold text-base px-8 py-4 rounded-full hover:bg-emerald-700 transition shadow-lg">Book Your Tour Now</a>
+                </div>
+            `;
+            contentArea.classList.add('fade-in');
+            if (window.innerWidth < 768) {
+                document.getElementById('main-scroll').scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
