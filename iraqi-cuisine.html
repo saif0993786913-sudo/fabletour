@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Iraqi Cuisine Explorer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Merriweather:wght@300;400;700;900&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Merriweather', 'serif'],
+                    },
+                    colors: {
+                        primary: '#047857',
+                        secondary: '#064e3b',
+                        surface: '#f8fafc',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .fade-in { animation: fadeIn 0.4s ease-in-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        html, body { height: 100%; width: 100%; overflow: hidden; background-color: transparent; }
+    </style>
+</head>
+<body class="bg-surface text-slate-800 flex flex-col md:flex-row font-sans w-full h-full">
+
+    <nav class="w-full md:w-96 bg-white border-r border-slate-200 flex flex-col h-1/3 md:h-full z-10 shadow-sm flex-shrink-0">
+        <div class="p-6 bg-secondary text-white shrink-0">
+            <h1 class="text-3xl font-bold tracking-tight">Iraqi Cuisine</h1>
+            <p class="text-emerald-100 text-sm mt-1">Culinary Heritage Explorer</p>
+        </div>
+        <div class="flex-1 overflow-y-auto no-scrollbar p-4 space-y-3" id="food-list"></div>
+    </nav>
+
+    <main class="flex-1 h-2/3 md:h-full overflow-y-auto relative bg-surface" id="main-scroll">
+        <div class="max-w-6xl mx-auto p-8 md:p-16 lg:p-24 pb-32" id="content-area">
+            <div class="flex flex-col items-center justify-center h-full text-center mt-10 md:mt-32 fade-in">
+                <svg class="w-24 h-24 text-emerald-600 mb-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                <h2 class="text-4xl font-bold text-slate-800 mb-4">Explore Iraqi Culinary Arts</h2>
+                <p class="text-slate-500 max-w-lg mx-auto text-lg">Select a traditional dish from the directory to read a comprehensive analysis of its history, cultural significance, and preparation traditions.</p>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const foodData = [
+            { 
+                name: "Masgouf", 
+                image: "https://i.ibb.co/CshDm8Db/Screenshot-2026-06-14-at-3-43-14-PM.png",
+                description: "Masgouf is undeniably the national dish of Iraq, a culinary icon that traces its roots back to the ancient Mesopotamian civilizations. As the centerpiece of our upcoming 7-day tour, we have dedicated an entire 'Marshes Day' to experience this masterpiece in its most authentic form. Imagine sitting along the tranquil, reed-lined banks of the southern marshes as the sun begins to set, the air thick with the intoxicating, smoky aroma of burning apricot wood logs. The preparation is a ritual in itself. A fresh river carp is split open, cleaned, and meticulously seasoned with rock salt, a touch of turmeric, and a hint of tamarind. It is then skewered and placed upright around a roaring circular fire. This ancient method of slow-grilling allows the skin to become beautifully charred and crispy, while the flesh inside remains succulent, moist, and infused with the essence of the wood smoke. When you dine with us, you are not just eating a meal; you are participating in a tradition of hospitality that has defined Iraqi culture for millennia. The fish is often served with a side of freshly baked flatbread, crisp pickled vegetables (turshi), and a zest of raw onion and sumac. We believe that to truly understand the soul of Iraq, you must share in the Masgouf ritual. During our Marshes Day excursion, your guides will share the stories of the Marsh Arabs, whose deep connection to these waters is mirrored in every bite of this smoky, perfectly grilled fish. It is the definitive experience of our journey, one that will linger in your memory long after the tour concludes." 
+            },
+            { 
+                name: "Dolma", 
+                image: "https://i.ibb.co/Kj1009pS/Screenshot-2026-06-14-at-3-48-45-PM.png",
+                description: "Iraqi Dolma is widely considered the ultimate test of an Iraqi cook’s patience, skill, and artistic devotion. On our 7-day tour, you will witness the intricate preparation of this dish, which serves as a profound symbol of the time and love poured into family gatherings. The 'filling' is a vibrant, carefully seasoned medley of short-grain rice, minced lamb, finely chopped parsley, dill, and a secret blend of Iraqi spices. The true artistry lies in the variety of vegetables used—hollowed-out zucchini, bell peppers, tomatoes, and eggplant—along with parcels of swiss chard or vine leaves. The bottom of the massive pot is typically lined with lamb chops or ribs, which render their fat during the long, slow-simmering process, creating a rich, caramelized base. The signature tang—the 'sour-sweet' profile that makes Iraqi Dolma so distinct—comes from a generous infusion of pomegranate molasses and tamarind paste. As the pot cooks, the ingredients steam in their own juices. When we serve this to you, it will be the highlight of a traditional feast. The act of flipping the pot—the 'galba'—is a theatrical moment of celebration. Seeing the perfectly stacked, steaming mound of stuffed vegetables spill onto the platter is a sight that signals the height of hospitality. It is a dish that takes hours to prepare and minutes to vanish, representing the heart of the Iraqi home. On our tour, you will not only taste this masterpiece but also learn the techniques that make each roll a perfect bite of history." 
+            },
+            { 
+                name: "Quzi", 
+                image: "https://i.ibb.co/6GDdsX9/Screenshot-2026-06-14-at-3-53-31-PM.png",
+                description: "Quzi is the regal centerpiece of Iraqi celebratory dining, a dish that transforms any meal into an event of unparalleled opulence. During our 7-day tour, we feature Quzi as our grand finale feast, a testament to the generosity and abundance that characterizes Iraqi culture. The lamb is traditionally served over a vast, aromatic bed of basmati rice, which has been meticulously prepared with a fragrant blend of whole spices—cardamom pods, cinnamon sticks, cloves, and bay leaves. To elevate the dish to its iconic status, the rice is embellished with a golden tapestry of toasted slivered almonds, plump raisins, and sometimes hard-boiled eggs, each adding a layer of texture and sweetness that contrasts beautifully with the savory, fall-apart richness of the roasted meat. The juices rendered from the slow-roasting process are incorporated into the rice, imparting a deep, savory foundation that is simply unforgettable. In Iraq, serving Quzi is a symbol of great respect and honor. When you share this dish with us at the end of your tour, you are connecting with generations of Iraqis who have marked their most significant weddings, religious holidays, and family milestones with this spectacular centerpiece. It is not just dinner; it is an immersion into the very soul of Iraqi hospitality. As you participate in this age-old tradition, you will see why Quzi is more than a recipe—it is a gesture of welcome that tells every guest, 'You are part of our family.' It is the most luxurious and heartwarming conclusion to your journey through our historic land." 
+            },
+            { 
+                name: "Kabab", 
+                image: "https://i.ibb.co/gMxcWcGz/Screenshot-2026-06-14-at-4-13-41-PM.png",
+                description: "Iraqi Kabab is not merely food; it is a cultural institution that has defined the street food and culinary scene of Baghdad for generations. When you join our 7-day tour, you will experience the genuine article, crafted with a dedication that borders on the obsessive. Unlike many regional versions, the Iraqi Kabab—specifically 'Kabab Iraqi'—relies on high-quality, fresh lamb mixed with a specific ratio of fat, hand-minced until perfectly textured. The meat is seasoned with a precise blend of salt, pepper, and sometimes a hint of sumac, allowing the natural, smoky flavor of the meat to take center stage. The preparation is a true spectacle. The meat is skewered on long, flat metal skewers and cooked over a roaring fire of charcoal. The charcoal grill is essential; it imparts a deep, charred, and earthy aroma that you simply cannot replicate in a home kitchen. As the fat drips onto the embers, it creates a savory smoke that infuses the meat from all sides. On our journey, we will take you to the most authentic, historic kabab houses where the masters—the 'Usta'—have spent their lives at the grill. The kabab is traditionally served on a bed of fresh, warm flatbread, which acts as a sponge, soaking up the meat's juices, and is paired with a vibrant array of sides: raw onions, tomatoes, parsley, and pickled vegetables. We have curated a special lunch during our 7-day tour specifically to introduce you to this smoky, succulent masterpiece, ensuring you get to taste the very essence of Iraqi street-level hospitality." 
+            },
+            { 
+                name: "Teka", 
+                image: "https://i.ibb.co/jk81N7gT/Screenshot-2026-06-14-at-4-16-53-PM.png",
+                description: "Teka is the quintessential Iraqi skewer, a testament to the mastery of fire and patience. Unlike simple shish-taouk, Iraqi Teka is defined by its succulent, tender cubes of meat—either prime lamb or marinated chicken—that have been slowly infused with a secret blend of spices, olive oil, and the tangy brightness of lemon or yogurt. On our 7-day tour, Teka represents one of the most anticipated culinary stops in our journey. Imagine being invited to an atmospheric, traditional grill house, where the air is filled with the scent of charcoal and sizzling meat. The meat, cut into perfectly uniform cubes, is threaded onto flat metal skewers and placed over a high-heat charcoal grill, a method that locks in all the juices while creating a beautifully charred, caramelized exterior. When you join us for this lunch, you will taste why Teka is the heart of Iraqi social dining. It is not just about the quality of the cut, which we source from local, premium-grade suppliers, but the tradition of sharing that comes with it. Served on a bed of fresh herbs, charred tomatoes, and warm, pillowy Iraqi bread that soaks up the savory drippings, Teka is a dish that invites conversation and long, leisurely meals. We have specifically included this as a highlight during our Baghdad city excursion, where you will dine amidst the hum of a vibrant, historic neighborhood. This is more than just meat on a stick; it is the culmination of generations of grilling techniques, perfected by local Usta (masters) who know exactly when to turn each skewer to achieve the perfect texture. Whether you choose the tender lamb or the succulent chicken, Teka is a definitive, unmissable experience on our tour, capturing the smoky, savory soul of modern and traditional Iraqi life." 
+            },
+            { 
+                name: "Broad Bean Rice", 
+                image: "https://i.ibb.co/ynxSXH5R/Screenshot-2026-06-14-at-4-21-38-PM.png",
+                description: "Broad Bean Rice, known affectionately in Iraq as 'Timman Bagilla', is undoubtedly one of the most anticipated seasonal highlights in the Iraqi culinary calendar. When you join our 7-day tour, you are sampling a dish that signals the arrival of spring—a time when fresh, vibrant green broad beans (fava beans) flood the local markets and home kitchens. This dish is the absolute epitome of home-cooked Iraqi comfort, a meal that is deceptively simple yet incredibly sophisticated in its depth of flavor. The preparation begins with the finest long-grain basmati rice, which is meticulously steamed alongside the fresh, shelled broad beans and a generous abundance of finely chopped, aromatic dill. As the pot simmers, the kitchen is filled with the intoxicating, earthy scent of the steaming dill and the subtle, creamy sweetness of the beans. On our curated 7-day tour, we have included Timman Bagilla to offer you a deeper understanding of the herbaceous, seasonal side of our cuisine. While our journey is justifiably famous for its hearty, meat-centric masterpieces like Quzi and Kabab, this rice dish provides a beautiful, fragrant balance that refreshes the palate. It is traditionally served alongside a bowl of fresh, cooling yogurt, tangy pickles (turshi), or a piece of succulent, slow-cooked protein. As we dine together, our guides will share the secret to the perfect Timman Bagilla—the balance of fresh dill to rice. This dish tells the story of Iraq’s agricultural richness; it is a direct celebration of the land's fertility. Sharing a communal platter of this green-speckled, fluffy rice with our group, perhaps while discussing the day’s adventures, is a vivid reminder that Iraqi food is intimately connected to the rhythm of the seasons. It is more than just a side dish; it is a reflection of the profound pride we take in transforming fresh, local produce into meals that nourish the soul and celebrate the harvest of our ancient land." 
+            }
+        ];
+
+        let currentActiveBtn = null;
+
+        function notifyParent() {
+            window.parent.postMessage({ type: 'resize', height: document.body.scrollHeight }, '*');
+        }
+
+        function renderList() {
+            const listContainer = document.getElementById('food-list');
+            foodData.forEach(food => {
+                const btn = document.createElement('button');
+                btn.className = 'w-full text-left px-5 py-4 rounded-xl border border-slate-200 bg-white hover:bg-emerald-50 transition-all flex flex-col';
+                btn.innerHTML = `<span class="font-bold text-slate-800 text-xl">${food.name}</span>`;
+                btn.onclick = () => renderFood(food, btn);
+                listContainer.appendChild(btn);
+            });
+        }
+
+        function renderFood(food, btnElement) {
+            if (currentActiveBtn) {
+                currentActiveBtn.classList.remove('bg-emerald-600', 'border-emerald-700', 'shadow-md');
+                currentActiveBtn.classList.add('bg-white', 'border-slate-200');
+                currentActiveBtn.querySelector('span').classList.remove('text-white');
+                currentActiveBtn.querySelector('span').classList.add('text-slate-800');
+            }
+            btnElement.classList.remove('bg-white', 'border-slate-200');
+            btnElement.classList.add('bg-emerald-600', 'border-emerald-700', 'shadow-md');
+            btnElement.querySelector('span').classList.add('text-white');
+            currentActiveBtn = btnElement;
+
+            const contentArea = document.getElementById('content-area');
+            contentArea.innerHTML = `
+                <div class="fade-in">
+                    <img src="${food.image}" onload="notifyParent()" class="w-full h-96 object-cover rounded-3xl shadow-2xl mb-12" alt="${food.name}">
+                    <h2 class="text-5xl md:text-6xl font-extrabold text-slate-900 mb-8">${food.name}</h2>
+                    <p class="text-xl md:text-2xl leading-relaxed text-slate-700 font-serif text-justify whitespace-pre-line mb-12">${food.description}</p>
+                    <a href="https://fabletour.com" target="_blank" class="inline-block bg-emerald-600 text-white font-bold text-xl px-10 py-5 rounded-full hover:bg-emerald-700 transition shadow-lg">Book Your Tour Now</a>
+                </div>
+            `;
+            document.getElementById('main-scroll').scrollTo({ top: 0, behavior: 'smooth' });
+            notifyParent();
+        }
+
+        window.onload = () => {
+            renderList();
+            notifyParent();
+        };
+    </script>
+</body>
+</html>
