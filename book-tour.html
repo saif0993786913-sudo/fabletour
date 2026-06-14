@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Book Your Tour · Fable Tour</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#0B1120;--navy-2:#131C30;--navy-3:#1E2A45;
+  --mist:#8A9BB5;--mist-2:#B8C4D6;--ivory:#F5F0E8;
+  --gold:#C9A84C;--gold-2:#E8C96A;--gold-dim:rgba(201,168,76,0.15);--gold-dim2:rgba(201,168,76,0.08);
+  --emerald:#2ECC8A;--emerald-dim:rgba(46,204,138,0.12);
+  --rose:#E05C7A;
+  --w5:rgba(255,255,255,0.05);--w8:rgba(255,255,255,0.08);--w12:rgba(255,255,255,0.12);--w20:rgba(255,255,255,0.20);
+}
+body{font-family:'Inter',sans-serif;background:var(--navy);color:var(--ivory);min-height:100vh;display:flex;justify-content:center;padding:2rem 1rem;overflow-x:hidden}
+.booking-container{background:var(--navy-2);border:1px solid var(--w12);border-radius:20px;width:100%;max-width:560px;overflow:hidden;box-shadow:0 40px 80px rgba(0,0,0,0.6);position:relative}
+
+/* HERO */
+.hero{background:linear-gradient(160deg,#0d1928,#1a1000);padding:2rem;border-bottom:1px solid var(--w8);position:relative;overflow:hidden}
+.hero::after{content:'';position:absolute;top:-40px;right:-40px;width:220px;height:220px;border-radius:50%;background:rgba(201,168,76,0.06);pointer-events:none;filter:blur(20px)}
+.eye{font-size:0.7rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--gold);margin-bottom:0.75rem;opacity:0.9;font-weight:600}
+.hero h1{font-family:'Cormorant Garamond',serif;font-size:2.25rem;font-weight:300;color:var(--ivory);line-height:1.1;margin-bottom:0.5rem}
+.hero h1 em{color:var(--gold);font-style:italic}
+.hero p{font-size:0.85rem;color:var(--mist);margin-bottom:1.25rem;line-height:1.5}
+.tags{display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:1rem}
+.tag{border-radius:20px;padding:0.25rem 0.7rem;font-size:0.7rem}
+.tag.gld{background:var(--gold-dim);border:1px solid rgba(201,168,76,0.2);color:var(--gold)}
+.tag.mst{background:var(--w5);border:1px solid var(--w12);color:var(--mist-2)}
+.ref-strip{display:inline-flex;align-items:center;gap:0.4rem;background:var(--gold-dim2);border:1px solid rgba(201,168,76,0.2);border-radius:20px;padding:0.3rem 0.9rem;font-size:0.72rem;color:var(--gold);margin-top:0.25rem;display:none}
+.ref-strip.show{display:inline-flex}
+
+/* ITINERARY */
+.itinerary{padding:1.5rem 2rem;border-bottom:1px solid var(--w8)}
+.sub-lbl{font-size:0.72rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--mist);margin-bottom:1rem}
+.day-list{position:relative;display:flex;flex-direction:column;gap:0.25rem}
+.day-list::before{content:'';position:absolute;left:11px;top:10px;bottom:10px;width:1px;background:rgba(201,168,76,0.2)}
+.day-item{display:flex;flex-direction:column;padding:0.75rem;border-radius:10px;transition:background 0.2s,transform 0.2s;margin-left:-0.75rem;cursor:pointer}
+.day-item:hover{background:var(--navy-3);transform:translateX(5px)}
+.day-header{display:flex;align-items:flex-start;gap:1rem;width:100%}
+.day-info{flex:1}
+.day-num{width:23px;height:23px;border-radius:50%;background:var(--navy-2);border:1px solid var(--gold);display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:700;color:var(--gold);flex-shrink:0;margin-top:1px;position:relative;z-index:1;transition:background 0.2s,color 0.2s,transform 0.2s}
+.day-item:hover .day-num{background:var(--gold);color:var(--navy);transform:scale(1.1)}
+.day-title{font-size:0.9rem;font-weight:500;color:var(--ivory);line-height:1.3;transition:color 0.2s}
+.day-item:hover .day-title{color:var(--gold-2)}
+.day-sub{font-size:0.78rem;color:var(--mist);margin-top:2px}
+.day-toggle-icon{color:var(--mist);font-size:1.4rem;font-weight:300;line-height:0.8;transition:transform 0.3s,color 0.3s;flex-shrink:0}
+.day-item:hover .day-toggle-icon{color:var(--gold)}
+.day-item.expanded .day-toggle-icon{transform:rotate(45deg);color:var(--gold)}
+.day-desc{font-size:0.82rem;color:var(--mist-2);line-height:1.65;margin-top:0.75rem;margin-left:calc(23px + 1rem);padding-top:0.75rem;border-top:1px dashed var(--w12);display:none;animation:fadeIn 0.3s ease}
+.day-item.expanded .day-desc{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:translateY(0)}}
+
+/* INCLUSIONS */
+.inclusions{padding:1.5rem 2rem;border-bottom:1px solid var(--w8);background:var(--w5)}
+.inc-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.75rem 1rem}
+.inc-item{font-size:0.78rem;color:var(--mist-2);display:flex;align-items:center;gap:0.5rem;padding:0.4rem;border-radius:8px;transition:background 0.2s}
+.inc-item:hover{background:var(--navy-3)}
+.inc-item span{color:var(--emerald);font-weight:bold}
+
+/* FORM */
+.form-wrap{padding:1.5rem 2rem 2rem}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.25rem}
+.form-grid .full{grid-column:1/-1}
+.field{display:flex;flex-direction:column;gap:0.4rem}
+.field label{font-size:0.73rem;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:var(--mist)}
+.field input,.field select{background:var(--w5);border:1px solid var(--w12);border-radius:10px;padding:0.8rem 1rem;color:var(--ivory);font-family:'Inter',sans-serif;font-size:0.875rem;outline:none;transition:border-color 0.2s;width:100%;-webkit-appearance:none}
+.field input::placeholder{color:var(--mist);opacity:0.6}
+.field input:focus,.field select:focus{border-color:rgba(201,168,76,0.5)}
+.field select{cursor:pointer;background-image:url("data:image/svg+xml;charset=US-ASCII,%3Csvg xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22 width%3D%22292.4%22 height%3D%22292.4%22%3E%3Cpath fill%3D%22%238A9BB5%22 d%3D%22M287 69.4a17.6 17.6 0 0 0-13-5.4H18.4c-5 0-9.3 1.8-12.9 5.4A17.6 17.6 0 0 0 0 82.2c0 5 1.8 9.3 5.4 12.9l128 127.9c3.6 3.6 7.8 5.4 12.8 5.4s9.2-1.8 12.8-5.4L287 95c3.5-3.5 5.4-7.8 5.4-12.8 0-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");background-repeat:no-repeat;background-position:right 1rem top 50%;background-size:0.65rem auto}
+.field select option{background:var(--navy-2);color:var(--ivory)}
+.field-err{font-size:0.71rem;color:var(--rose);display:none;margin-top:2px}
+.field-err.show{display:block}
+.price-row{background:var(--gold-dim2);border:1px solid rgba(201,168,76,0.18);border-radius:12px;padding:1rem 1.25rem;display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;transition:transform 0.2s}
+.price-row:hover{transform:translateY(-2px)}
+.price-lbl{font-size:0.85rem;color:var(--mist);font-weight:500}
+.price-val{font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:600;color:var(--gold)}
+.btn-gold{background:var(--gold);color:var(--navy);border:none;border-radius:10px;padding:1rem;font-family:'Inter',sans-serif;font-size:1rem;font-weight:600;cursor:pointer;transition:all 0.2s;width:100%;display:flex;align-items:center;justify-content:center;gap:0.5rem}
+.btn-gold:hover{background:var(--gold-2);transform:translateY(-1px)}
+.btn-gold:disabled{opacity:0.6;pointer-events:none}
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(11,17,32,0.3);border-top-color:var(--navy);border-radius:50%;animation:spin 0.7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.form-note{text-align:center;font-size:0.72rem;color:var(--mist);opacity:0.65;line-height:1.6;margin-top:0.9rem}
+
+/* SUCCESS */
+.success-view{display:none;text-align:center;padding:3.5rem 2rem}
+.success-view.active{display:block}
+.suc-icon{width:72px;height:72px;background:var(--emerald-dim);border:1px solid rgba(46,204,138,0.3);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1.5rem;color:var(--emerald)}
+.success-view h2{font-family:'Cormorant Garamond',serif;font-size:2rem;color:var(--ivory);margin-bottom:0.75rem}
+.success-view p{font-size:0.9rem;color:var(--mist);line-height:1.7;max-width:400px;margin:0 auto 1.5rem}
+.suc-detail{background:var(--w5);border:1px solid var(--w8);border-radius:12px;padding:1rem 1.25rem;text-align:left}
+.suc-row{display:flex;justify-content:space-between;padding:0.4rem 0;font-size:0.8rem;border-bottom:1px solid var(--w5)}
+.suc-row:last-child{border-bottom:none}
+.suc-row .k{color:var(--mist)}.suc-row .v{color:var(--ivory);font-weight:500}
+
+@media(max-width:540px){.form-grid{grid-template-columns:1fr}.inc-grid{grid-template-columns:1fr}.hero,.itinerary,.inclusions,.form-wrap{padding:1.25rem 1.25rem}}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--w12);border-radius:4px}
+</style>
+</head>
+<body>
+<div class="booking-container">
+
+  <div id="booking-content">
+
+    <!-- HERO -->
+    <div class="hero">
+      <div class="eye">Discover the Land of Civilizations</div>
+      <h1>7-Day Iraq <em>Heritage Tour</em></h1>
+      <p>Baghdad · Karbala · Najaf · Basra · Samarra · Mosul</p>
+      <div class="tags">
+        <span class="tag gld">✈ All-Inclusive</span>
+        <span class="tag mst">🏛 7 Days · 7 Cities</span>
+        <span class="tag mst">⭐ Expert Guide</span>
+        <span class="tag mst">🔒 Permits Included</span>
+      </div>
+      <div class="ref-strip" id="ref-strip">✦ Referred by <span id="ref-agent-name" style="font-weight:600;margin-left:4px">your agent</span></div>
+    </div>
+
+    <!-- ITINERARY -->
+    <div class="itinerary">
+      <div class="sub-lbl">7-Day Itinerary</div>
+      <div class="day-list">
+
+        <div class="day-item expanded" onclick="this.classList.toggle('expanded')">
+          <div class="day-header"><div class="day-num">1</div><div class="day-info"><div class="day-title">Babylon &amp; Karbala</div><div class="day-sub">Ancient Mesopotamian grandeur meets spiritual devotion.</div></div><div class="day-toggle-icon">+</div></div>
+          <div class="day-desc">Arrival at Baghdad International Airport and transfer to your hotel. Walk the Processional Way at Babylon, marvel at the Ishtar Gate foundations, and explore Borsippa's Ziggurat of Nabu. In the evening, visit Karbala and the luminous Imam Husayn and Al-Abbas shrines. Overnight in Karbala.</div>
+        </div>
+
+        <div class="day-item" onclick="this.classList.toggle('expanded')">
+          <div class="day-header"><div class="day-num">2</div><div class="day-info"><div class="day-title">Najaf &amp; Kufa</div><div class="day-sub">Deep-dive into the theological history of Islamic civilization.</div></div><div class="day-toggle-icon">+</div></div>
+          <div class="day-desc">Explore the Great Mosque of Kufa — one of the world's oldest — and the House of Imam Ali. Walk through Wadi Al-Salam, the largest cemetery on Earth, before culminating at the magnificent golden-domed Shrine of Imam Ali in Najaf.</div>
+        </div>
+
+        <div class="day-item" onclick="this.classList.toggle('expanded')">
+          <div class="day-header"><div class="day-num">3</div><div class="day-info"><div class="day-title">Southern Iraq Origins</div><div class="day-sub">From the birth of writing to the living museum of the marshes.</div></div><div class="day-toggle-icon">+</div></div>
+          <div class="day-desc">Discover Uruk — the world's first city-state and birthplace of writing. Visit the monumental Ziggurat of Ur, then enter the UNESCO-listed Mesopotamian Marshes to experience traditional Mudhif reed houses and the legendary Adam's Tree.</div>
+        </div>
+
+        <div class="day-item" onclick="this.classList.toggle('expanded')">
+          <div class="day-header"><div class="day-num">4</div><div class="day-info"><div class="day-title">Basra Heritage</div><div class="day-sub">Maritime trade and architectural elegance.</div></div><div class="day-toggle-icon">+</div></div>
+          <div class="day-desc">Walk Basra's historic Old City, admiring intricate Shanasheel wooden balconies. Visit the world-class Basra Museum in a former palace overlooking the Shatt al-Arab, then begin the journey north back toward Baghdad.</div>
+        </div>
+
+        <div class="day-item" onclick="this.classList.toggle('expanded')">
+          <div class="day-header"><div class="day-num">5</div><div class="day-info"><div class="day-title">Samarra &amp; Northern Journey</div><div class="day-sub">The architectural ambition of the Abbasid era.</div></div><div class="day-toggle-icon">+</div></div>
+          <div class="day-desc">Head north to Samarra — 9th-century Abbasid capital. Climb the spectacular spiraling Malwiya Minaret for desert panoramas. Visit the Al-Askari Shrine with its brilliant gold-leaf dome. Continue to Mosul for an overnight stay.</div>
+        </div>
+
+        <div class="day-item" onclick="this.classList.toggle('expanded')">
+          <div class="day-header"><div class="day-num">6</div><div class="day-info"><div class="day-title">Mosul &amp; Ancient Empires</div><div class="day-sub">Resilience, history, and the ruins of Hatra.</div></div><div class="day-toggle-icon">+</div></div>
+          <div class="day-desc">Tour Old Mosul's restored mosques and markets. Visit the ancient Assyrian capital of Nimrud. The day's climax is UNESCO-listed Hatra — a breathtaking fusion of Hellenistic, Roman, and Parthian architecture standing against the desert sky.</div>
+        </div>
+
+        <div class="day-item" onclick="this.classList.toggle('expanded')">
+          <div class="day-header"><div class="day-num">7</div><div class="day-info"><div class="day-title">Baghdad Grand Finale</div><div class="day-sub">A synthesis of ancient and modern Iraq.</div></div><div class="day-toggle-icon">+</div></div>
+          <div class="day-desc">Visit the shrines of Imam Musa al-Kadhim and Imam Muhammad al-Jawad. Stroll through Old Baghdad's tea houses, ending at the legendary Al-Mutanabbi Street. Afternoon visit to the remarkably preserved Aqar Quf Ziggurat before departure.</div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- INCLUSIONS -->
+    <div class="inclusions">
+      <div class="sub-lbl">What's Included</div>
+      <div class="inc-grid">
+        <div class="inc-item"><span>✓</span> Premium hotel accommodation</div>
+        <div class="inc-item"><span>✓</span> All meals &amp; traditional feasts</div>
+        <div class="inc-item"><span>✓</span> Private climate-controlled transport</div>
+        <div class="inc-item"><span>✓</span> All entrance fees &amp; permits</div>
+        <div class="inc-item"><span>✓</span> Expert English-speaking guide</div>
+        <div class="inc-item"><span>✓</span> Visa on arrival assistance</div>
+        <div class="inc-item"><span>✓</span> Government security clearances</div>
+        <div class="inc-item"><span>✓</span> Emergency support &amp; bottled water</div>
+      </div>
+    </div>
+
+    <!-- FORM -->
+    <div class="form-wrap">
+      <div class="sub-lbl">Reserve Your Spot</div>
+      <div class="form-grid">
+        <div class="field full">
+          <label>Full Name</label>
+          <input type="text" id="f-name" placeholder="Enter your legal name" autocomplete="name">
+          <div class="field-err" id="e-name">Please enter your full name.</div>
+        </div>
+        <div class="field">
+          <label>Email Address</label>
+          <input type="email" id="f-email" placeholder="you@email.com" autocomplete="email">
+          <div class="field-err" id="e-email">Please enter a valid email.</div>
+        </div>
+        <div class="field">
+          <label>WhatsApp / Phone</label>
+          <input type="tel" id="f-phone" placeholder="+1 000 000 0000" autocomplete="tel">
+          <div class="field-err" id="e-phone">Please enter your phone number.</div>
+        </div>
+        <div class="field">
+          <label>Preferred Start Date</label>
+          <input type="date" id="f-date">
+          <div class="field-err" id="e-date">Please select a travel date.</div>
+        </div>
+        <div class="field">
+          <label>Number of Travelers</label>
+          <select id="f-travelers" onchange="updatePrice()">
+            <option value="1">1 Traveler</option>
+            <option value="2">2 Travelers</option>
+            <option value="3">3 Travelers</option>
+            <option value="4">4 Travelers</option>
+            <option value="5">5 Travelers</option>
+          </select>
+        </div>
+      </div>
+      <div class="price-row">
+        <span class="price-lbl">Total Booking Price</span>
+        <span class="price-val" id="total-price">$2,500</span>
+      </div>
+      <button class="btn-gold" id="btn-submit" onclick="submitBooking()">Reserve My Place →</button>
+      <p class="form-note">No payment required now. Our team will contact you within 24 hours to confirm your booking and arrange payment.</p>
+    </div>
+
+  </div><!-- /booking-content -->
+
+  <!-- SUCCESS -->
+  <div class="success-view" id="success-content">
+    <div class="suc-icon">
+      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+    </div>
+    <h2>Booking Received!</h2>
+    <p>Thank you for choosing Fable Tour. Your dedicated agent will reach out within 24 hours to confirm your dates and finalize your journey.</p>
+    <div class="suc-detail" id="suc-detail"></div>
+  </div>
+
+</div><!-- /booking-container -->
+
+<script>
+'use strict';
+
+// ══════════════════════════════════════════════════════
+//  ⚙️  CONFIGURATION — replace with your Supabase values
+// ══════════════════════════════════════════════════════
+const SUPABASE_URL  = 'https://duwjfcoccovuyefapwww.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR1d2pmY29jY292dXllZmFwd3d3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzNzY5NzQsImV4cCI6MjA5Njk1Mjk3NH0.P38NWcfXxeXIwSSqlPKUj-TgPNVVDme7LYJuG2tnlYY';
+
+const WEB3_KEY      = 'e9d1132b-a901-4764-af66-b98807d3d918';
+const SUPPORT_EMAIL = 'Support@fabletour.com';
+const PRICE_PP      = 2500;
+const COMMISSION    = 0.12;
+// ══════════════════════════════════════════════════════
+
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_ANON);
+
+// Read referral code from URL
+let urlRef = '';
+let agentId = null;
+
+// ── INIT ──────────────────────────────────────────────
+(async function init(){
+  // Set min date
+  const d = document.getElementById('f-date');
+  if(d) d.min = new Date().toISOString().split('T')[0];
+
+  // Read ?ref= from multiple sources:
+  // 1. Direct URL: book-tour.html?ref=CODE
+  // 2. Iframe embedded: parent URL has ?ref=CODE
+  // 3. Hash fallback: book-tour.html#ref=CODE
+  function getRef(){
+    // Try own URL first
+    let ref = new URLSearchParams(location.search).get('ref') || '';
+    if(ref) return ref;
+
+    // Try hash (fallback for some iframe setups)
+    ref = new URLSearchParams(location.hash.replace('#','?')).get('ref') || '';
+    if(ref) return ref;
+
+    // Try reading from parent URL if in iframe (same origin only)
+    try {
+      ref = new URLSearchParams(window.parent.location.search).get('ref') || '';
+      if(ref) return ref;
+    } catch(e){}
+
+    // Try referrer URL
+    try {
+      ref = new URLSearchParams(new URL(document.referrer).search).get('ref') || '';
+      if(ref) return ref;
+    } catch(e){}
+
+    return '';
+  }
+
+  urlRef = getRef();
+
+  // Also store in sessionStorage so it survives iframe navigation
+  if(urlRef){
+    sessionStorage.setItem('fable_ref', urlRef);
+  } else {
+    urlRef = sessionStorage.getItem('fable_ref') || '';
+  }
+
+  if(urlRef){
+    // Resolve agent from ref_code
+    const { data: agent } = await db.from('agents').select('id,full_name').eq('ref_code', urlRef).single();
+    if(agent){
+      agentId = agent.id;
+      // Show referred-by strip
+      document.getElementById('ref-agent-name').textContent = agent.full_name;
+      document.getElementById('ref-strip').classList.add('show');
+      // Log the click (non-blocking)
+      logClick(agent.id);
+    }
+  }
+})();
+
+async function logClick(agentId){
+  await db.from('link_clicks').insert({
+    ref_code:   urlRef,
+    agent_id:   agentId,
+    user_agent: navigator.userAgent.substring(0,200),
+  });
+}
+
+// ── PRICE ─────────────────────────────────────────────
+function updatePrice(){
+  const n = parseInt(document.getElementById('f-travelers').value)||1;
+  document.getElementById('total-price').textContent = '$'+(n*PRICE_PP).toLocaleString();
+}
+
+// ── VALIDATE ──────────────────────────────────────────
+const $ = id => document.getElementById(id);
+function ve(e){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
+function showErr(id,v){ $(id).classList.toggle('show',v); }
+
+// ── SUBMIT ────────────────────────────────────────────
+async function submitBooking(){
+  const name      = $('f-name').value.trim();
+  const email     = $('f-email').value.trim();
+  const phone     = $('f-phone').value.trim();
+  const date      = $('f-date').value;
+  const travelers = parseInt($('f-travelers').value)||1;
+
+  let ok = true;
+  showErr('e-name',  !name);       if(!name)      ok=false;
+  showErr('e-email', !ve(email));  if(!ve(email)) ok=false;
+  showErr('e-phone', !phone);      if(!phone)     ok=false;
+  showErr('e-date',  !date);       if(!date)      ok=false;
+  if(!ok) return;
+
+  const btn = $('btn-submit');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Processing…';
+
+  const total      = travelers * PRICE_PP;
+  const commission = Math.round(total * COMMISSION);
+  const fmtDate    = new Date(date+'T12:00:00').toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'});
+
+  // Save to Supabase
+  const { error } = await db.from('bookings').insert({
+    agent_id:     agentId || null,
+    ref_code:     urlRef || null,
+    source:       urlRef ? 'referral' : 'organic',
+    client_name:  name,
+    client_email: email,
+    client_phone: phone,
+    travel_date:  date,
+    travelers,
+    total_price:  total,
+    commission,
+    status:       'pending',
+  });
+
+  if(error){
+    btn.disabled = false;
+    btn.textContent = 'Reserve My Place →';
+    alert('Something went wrong. Please email Support@fabletour.com directly.');
+    return;
+  }
+
+  // Notify support
+  await sendSupportEmail(
+    '📬 New Booking — '+name+' ('+travelers+' pax)',
+    [
+      'New booking submitted via Fable Tour booking page.',
+      '',
+      'Client Name  : '+name,
+      'Client Email : '+email,
+      'Client Phone : '+phone,
+      'Travel Date  : '+fmtDate,
+      'Travelers    : '+travelers,
+      'Total Price  : $'+total.toLocaleString(),
+      'Commission   : $'+commission.toLocaleString(),
+      'Referral Code: '+(urlRef||'Direct / Organic'),
+      '',
+      'Please follow up within 24 hours.',
+    ]
+  );
+
+  // Show success
+  $('booking-content').style.display = 'none';
+  $('success-content').classList.add('active');
+  $('suc-detail').innerHTML = [
+    ['Name', name], ['Email', email], ['Tour', '7-Day Iraq Heritage Tour'],
+    ['Date', fmtDate], ['Travelers', travelers+' pax'], ['Total', '$'+total.toLocaleString()],
+  ].map(([k,v])=>`<div class="suc-row"><span class="k">${k}</span><span class="v">${v}</span></div>`).join('');
+}
+
+// ── EMAIL ─────────────────────────────────────────────
+async function sendSupportEmail(subject, lines){
+  try{
+    await fetch('https://api.web3forms.com/submit',{
+      method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},
+      body:JSON.stringify({ access_key:WEB3_KEY, to:SUPPORT_EMAIL, subject, message:lines.join('\n') })
+    });
+  } catch(_){}
+}
+</script>
+</body>
+</html>

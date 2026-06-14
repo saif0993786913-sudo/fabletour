@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fable Tour · Affiliate Portal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#0B1120;--navy-2:#131C30;--navy-3:#1E2A45;
+  --mist:#8A9BB5;--mist-2:#B8C4D6;--ivory:#F5F0E8;
+  --gold:#C9A84C;--gold-2:#E8C96A;--gold-dim:rgba(201,168,76,0.15);--gold-dim2:rgba(201,168,76,0.08);
+  --emerald:#2ECC8A;--emerald-dim:rgba(46,204,138,0.12);
+  --rose:#E05C7A;--rose-dim:rgba(224,92,122,0.12);
+  --amber:#E8A23A;--amber-dim:rgba(232,162,58,0.12);
+  --w5:rgba(255,255,255,0.05);--w8:rgba(255,255,255,0.08);
+  --w12:rgba(255,255,255,0.12);--w20:rgba(255,255,255,0.20);
+}
+body{font-family:'Inter',sans-serif;background:var(--navy);color:var(--ivory);min-height:100vh;overflow-x:hidden}
+.screen{display:none;min-height:100vh}
+.screen.active{display:flex}
+
+/* ── AUTH ── */
+#auth-screen{align-items:center;justify-content:center;flex-direction:column;position:relative;overflow:hidden}
+.auth-bg{position:absolute;inset:0;background-image:linear-gradient(rgba(201,168,76,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(201,168,76,0.04) 1px,transparent 1px);background-size:60px 60px;pointer-events:none}
+.orb{position:absolute;border-radius:50%;filter:blur(80px);pointer-events:none}
+.orb1{width:500px;height:500px;background:rgba(201,168,76,0.06);top:-100px;right:-100px}
+.orb2{width:400px;height:400px;background:rgba(46,204,138,0.04);bottom:-80px;left:-80px}
+.auth-wrap{position:relative;z-index:1;width:100%;max-width:420px;padding:2rem}
+.auth-brand{text-align:center;margin-bottom:2rem}
+.brand-mark{display:inline-flex;align-items:center;justify-content:center;width:52px;height:52px;background:var(--gold-dim);border:1px solid rgba(201,168,76,0.3);border-radius:14px;margin-bottom:0.75rem}
+.brand-mark svg{width:26px;height:26px}
+.auth-brand h1{font-family:'Cormorant Garamond',serif;font-size:1.9rem;font-weight:300;letter-spacing:0.06em}
+.auth-brand h1 em{font-style:italic;color:var(--gold)}
+.auth-brand p{font-size:0.72rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--mist);margin-top:0.3rem}
+.auth-card{background:var(--navy-2);border:1px solid var(--w12);border-radius:20px;padding:1.75rem}
+.tabs{display:flex;background:var(--w5);border-radius:10px;padding:4px;margin-bottom:1.5rem;gap:4px}
+.tab{flex:1;padding:0.5rem;border:none;background:transparent;color:var(--mist);font-family:'Inter',sans-serif;font-size:0.8rem;font-weight:500;border-radius:7px;cursor:pointer;transition:all 0.2s}
+.tab.active{background:var(--w12);color:var(--ivory)}
+.fpanel{display:none;flex-direction:column;gap:0.9rem}
+.fpanel.active{display:flex}
+.field{display:flex;flex-direction:column;gap:0.4rem}
+.field label{font-size:0.72rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--mist)}
+.field input,.field select{background:var(--w5);border:1px solid var(--w12);border-radius:10px;padding:0.72rem 0.9rem;color:var(--ivory);font-family:'Inter',sans-serif;font-size:0.875rem;outline:none;transition:border-color 0.2s;width:100%;-webkit-appearance:none}
+.field input::placeholder{color:var(--mist);opacity:0.55}
+.field input:focus,.field select:focus{border-color:rgba(201,168,76,0.5)}
+.field select{cursor:pointer}
+.field select option{background:var(--navy-2);color:var(--ivory)}
+.field-err{font-size:0.71rem;color:var(--rose);display:none;margin-top:2px}
+.field-err.show{display:block}
+.btn-gold{background:var(--gold);color:var(--navy);border:none;border-radius:10px;padding:0.8rem;font-family:'Inter',sans-serif;font-size:0.875rem;font-weight:600;cursor:pointer;transition:all 0.2s;width:100%}
+.btn-gold:hover{background:var(--gold-2);transform:translateY(-1px)}
+.btn-gold:disabled{opacity:0.6;pointer-events:none}
+.auth-err{background:var(--rose-dim);border:1px solid rgba(224,92,122,0.3);border-radius:8px;padding:0.6rem 0.9rem;font-size:0.78rem;color:var(--rose);display:none}
+.auth-err.show{display:block}
+
+/* ── DASHBOARD ── */
+#dash-screen{flex-direction:column}
+.topbar{background:var(--navy-2);border-bottom:1px solid var(--w8);padding:0 2rem;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;flex-shrink:0}
+.tb-brand{display:flex;align-items:center;gap:0.7rem}
+.tb-mark{width:30px;height:30px;background:var(--gold-dim);border:1px solid rgba(201,168,76,0.25);border-radius:8px;display:flex;align-items:center;justify-content:center}
+.tb-mark svg{width:15px;height:15px}
+.tb-name{font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-weight:400;letter-spacing:0.04em}
+.tb-name em{color:var(--gold);font-style:italic}
+.tb-right{display:flex;align-items:center;gap:0.9rem}
+.agent-badge{display:flex;align-items:center;gap:0.5rem;background:var(--w5);border:1px solid var(--w8);border-radius:8px;padding:0.3rem 0.7rem;font-size:0.8rem;color:var(--mist-2)}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--emerald);box-shadow:0 0 6px rgba(46,204,138,0.6);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+.btn-out{background:transparent;border:1px solid var(--w12);border-radius:8px;padding:0.3rem 0.7rem;font-size:0.8rem;color:var(--mist);font-family:'Inter',sans-serif;cursor:pointer;transition:all 0.2s}
+.btn-out:hover{border-color:var(--w20);color:var(--ivory)}
+.dash-body{flex:1;padding:2rem;display:flex;flex-direction:column;gap:1.5rem;max-width:1200px;margin:0 auto;width:100%}
+.eyebrow{display:flex;align-items:center;gap:0.6rem;font-size:0.7rem;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--gold);margin-bottom:1rem}
+.eyebrow::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(201,168,76,0.3),transparent)}
+
+/* STATS */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem}
+.stat-card{background:var(--navy-2);border:1px solid var(--w8);border-radius:14px;padding:1.25rem 1.5rem;position:relative;overflow:hidden;transition:border-color 0.2s}
+.stat-card:hover{border-color:var(--w20)}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--gold);opacity:0;transition:opacity 0.2s}
+.stat-card:hover::before{opacity:0.5}
+.stat-card.em::before{background:var(--emerald)}
+.stat-card.am::before{background:var(--amber)}
+.stat-card.ro::before{background:var(--rose)}
+.stat-lbl{font-size:0.69rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--mist);margin-bottom:0.5rem;display:flex;align-items:center;gap:0.4rem}
+.stat-val{font-family:'Cormorant Garamond',serif;font-size:2rem;font-weight:600;color:var(--ivory);line-height:1;margin-bottom:0.25rem}
+.stat-sub{font-size:0.69rem;color:var(--mist);opacity:0.7}
+
+/* TWO-COL */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem}
+.panel{background:var(--navy-2);border:1px solid var(--w8);border-radius:16px;padding:1.5rem}
+
+/* LINK BOX */
+.link-box{background:var(--w5);border:1px solid var(--w12);border-radius:10px;padding:0.7rem 1rem;display:flex;align-items:center;gap:0.75rem;margin-bottom:1rem}
+.link-text{flex:1;font-size:0.8rem;color:var(--gold);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500}
+.btn-sm{background:var(--w8);border:1px solid var(--w12);border-radius:7px;padding:0.38rem 0.65rem;color:var(--mist-2);font-family:'Inter',sans-serif;font-size:0.73rem;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:0.35rem;transition:all 0.2s;white-space:nowrap;flex-shrink:0}
+.btn-sm:hover{background:var(--w12);color:var(--ivory)}
+.btn-sm svg{width:12px;height:12px}
+.link-actions{display:flex;gap:0.75rem}
+.btn-sec{background:transparent;border:1px solid var(--w12);border-radius:9px;padding:0.55rem 1rem;color:var(--mist-2);font-family:'Inter',sans-serif;font-size:0.8rem;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:0.5rem;transition:all 0.2s;flex:1;justify-content:center}
+.btn-sec:hover{border-color:rgba(201,168,76,0.4);color:var(--gold)}
+.btn-sec.gld{border-color:rgba(201,168,76,0.3);color:var(--gold)}
+.btn-sec.gld:hover{background:var(--gold-dim)}
+.btn-sec svg{width:14px;height:14px}
+.info-box{background:var(--w5);border-radius:10px;padding:0.85rem 1rem;display:flex;align-items:flex-start;gap:0.6rem;margin-top:1rem}
+.info-box p{font-size:0.73rem;color:var(--mist);line-height:1.6}
+
+/* BOOKING FORM */
+.bk-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.9rem}
+.bk-grid .full{grid-column:1/-1}
+.tour-badge{background:var(--gold-dim2);border:1px solid rgba(201,168,76,0.18);border-radius:10px;padding:0.7rem 1rem;margin-bottom:1rem;display:flex;align-items:center;gap:0.6rem}
+.tour-badge .t{font-size:0.75rem;font-weight:600;color:var(--gold)}
+.tour-badge .s{font-size:0.7rem;color:var(--mist);margin-top:1px}
+
+/* LEDGER */
+.ledger-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
+.ledger-scroll{overflow-y:auto;max-height:480px}
+table.tbl{width:100%;border-collapse:collapse;font-size:0.8rem}
+table.tbl thead tr{border-bottom:1px solid var(--w8)}
+table.tbl th{padding:0 0 0.7rem;text-align:left;font-size:0.67rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--mist)}
+table.tbl th:last-child,table.tbl td:last-child{text-align:right}
+table.tbl tbody tr{border-bottom:1px solid var(--w5);transition:background 0.15s}
+table.tbl tbody tr:hover{background:var(--w5)}
+table.tbl td{padding:0.7rem 0;color:var(--ivory);vertical-align:middle}
+table.tbl td:first-child{color:var(--mist-2);font-size:0.73rem}
+.av-wrap{display:inline-flex;align-items:center;gap:0.5rem}
+.av{width:26px;height:26px;border-radius:50%;background:var(--gold-dim);border:1px solid rgba(201,168,76,0.2);display:flex;align-items:center;justify-content:center;font-size:0.63rem;font-weight:600;color:var(--gold);flex-shrink:0}
+.pill{display:inline-flex;align-items:center;gap:0.35rem;padding:0.2rem 0.6rem;border-radius:20px;font-size:0.68rem;font-weight:500}
+.pill::before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor}
+.pill.conf{background:var(--emerald-dim);color:var(--emerald)}
+.pill.pend{background:var(--amber-dim);color:var(--amber)}
+.earn{font-family:'Cormorant Garamond',serif;font-size:0.95rem;font-weight:600;color:var(--gold)}
+.tbl-empty{text-align:center;padding:2.5rem 0;color:var(--mist);font-size:0.8rem;opacity:0.6}
+.live-badge{display:inline-flex;align-items:center;gap:0.4rem;font-size:0.67rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--emerald);background:var(--emerald-dim);border:1px solid rgba(46,204,138,0.2);border-radius:20px;padding:0.2rem 0.6rem}
+.live-badge::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--emerald);animation:pulse 1.5s infinite}
+
+/* FLASH */
+@keyframes flash{0%{background:rgba(46,204,138,0.18)}100%{background:transparent}}
+.new-row{animation:flash 2.5s ease-out forwards}
+
+/* TOAST */
+.toast{position:fixed;bottom:1.5rem;right:1.5rem;background:var(--navy-2);border:1px solid var(--w20);border-radius:12px;padding:0.9rem 1.2rem;display:flex;align-items:center;gap:0.75rem;font-size:0.8rem;color:var(--ivory);z-index:999;transform:translateY(100px);opacity:0;transition:all 0.35s cubic-bezier(0.34,1.56,0.64,1);max-width:320px;box-shadow:0 8px 32px rgba(0,0,0,0.4);pointer-events:none}
+.toast.show{transform:translateY(0);opacity:1}
+.ti{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.8rem;flex-shrink:0}
+.ti.s{background:var(--emerald-dim);color:var(--emerald)}
+.ti.i{background:var(--gold-dim);color:var(--gold)}
+.ti.e{background:var(--rose-dim);color:var(--rose)}
+
+/* LOADING SPINNER */
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,0.2);border-top-color:var(--gold);border-radius:50%;animation:spin 0.7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+@media(max-width:768px){.stats-row{grid-template-columns:1fr 1fr}.two-col{grid-template-columns:1fr}.bk-grid{grid-template-columns:1fr}.bk-grid .full{grid-column:auto}.topbar,.dash-body{padding-left:1rem;padding-right:1rem}table.tbl td:nth-child(3),table.tbl th:nth-child(3){display:none}}
+@media(max-width:480px){.stats-row{grid-template-columns:1fr}}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--w12);border-radius:4px}
+</style>
+</head>
+<body>
+
+<!-- ═══ AUTH ═══ -->
+<div id="auth-screen" class="screen active">
+  <div class="auth-bg"></div>
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+  <div class="auth-wrap">
+    <div class="auth-brand">
+      <div class="brand-mark">
+        <svg viewBox="0 0 28 28" fill="none"><path d="M14 3L25 8.5V19.5L14 25L3 19.5V8.5L14 3Z" stroke="#C9A84C" stroke-width="1.5"/><path d="M14 8L20 11.5V18.5L14 22L8 18.5V11.5L14 8Z" fill="rgba(201,168,76,0.15)" stroke="#C9A84C" stroke-width="0.75"/><circle cx="14" cy="15" r="2" fill="#C9A84C"/></svg>
+      </div>
+      <h1>Fable <em>Tour</em></h1>
+      <p>Affiliate Partner Portal</p>
+    </div>
+    <div class="auth-card">
+      <div class="tabs">
+        <button class="tab active" onclick="switchTab('login')">Sign In</button>
+        <button class="tab" onclick="switchTab('signup')">Register</button>
+      </div>
+      <div class="auth-err" id="auth-err"></div>
+
+      <!-- LOGIN -->
+      <div class="fpanel active" id="panel-login">
+        <div class="field"><label>Email Address</label><input type="email" id="li-email" placeholder="agent@example.com" autocomplete="email"></div>
+        <div class="field"><label>Password</label><input type="password" id="li-pass" placeholder="••••••••" autocomplete="current-password"></div>
+        <button class="btn-gold" id="btn-login" onclick="handleLogin()">Access Dashboard</button>
+      </div>
+
+      <!-- SIGNUP -->
+      <div class="fpanel" id="panel-signup">
+        <div class="field"><label>Full Name</label><input type="text" id="su-name" placeholder="Your full name" autocomplete="name"></div>
+        <div class="field"><label>Email Address</label><input type="email" id="su-email" placeholder="your@email.com" autocomplete="email"></div>
+        <div class="field"><label>WhatsApp Number</label><input type="tel" id="su-phone" placeholder="+1 000 000 0000" autocomplete="tel"></div>
+        <div class="field">
+          <label>Region / Market</label>
+          <select id="su-region">
+            <option value="">Select your region</option>
+            <option>Middle East &amp; Gulf</option><option>Europe</option>
+            <option>North America</option><option>Southeast Asia</option>
+            <option>Africa</option><option>Other</option>
+          </select>
+        </div>
+        <div class="field"><label>Password</label><input type="password" id="su-pass" placeholder="Min. 8 characters" autocomplete="new-password"></div>
+        <button class="btn-gold" id="btn-signup" onclick="handleSignup()">Create Agent Account</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ DASHBOARD ═══ -->
+<div id="dash-screen" class="screen">
+  <div class="topbar">
+    <div class="tb-brand">
+      <div class="tb-mark"><svg viewBox="0 0 28 28" fill="none"><path d="M14 3L25 8.5V19.5L14 25L3 19.5V8.5L14 3Z" stroke="#C9A84C" stroke-width="1.5"/><path d="M14 8L20 11.5V18.5L14 22L8 18.5V11.5L14 8Z" fill="rgba(201,168,76,0.15)" stroke="#C9A84C" stroke-width="0.75"/><circle cx="14" cy="15" r="2" fill="#C9A84C"/></svg></div>
+      <div class="tb-name">Fable <em>Tour</em> · Agent Portal</div>
+    </div>
+    <div class="tb-right">
+      <div class="agent-badge"><div class="live-dot"></div><span id="agent-name-badge">Agent</span></div>
+      <button class="btn-out" onclick="handleLogout()">Sign Out</button>
+    </div>
+  </div>
+
+  <div class="dash-body">
+
+    <!-- STATS -->
+    <div>
+      <div class="eyebrow">Performance Overview</div>
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-lbl">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+            Link Clicks
+          </div>
+          <div class="stat-val" id="stat-clicks">—</div>
+          <div class="stat-sub">Total referral link visits</div>
+        </div>
+        <div class="stat-card em">
+          <div class="stat-lbl">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            Total Bookings
+          </div>
+          <div class="stat-val" id="stat-bookings">—</div>
+          <div class="stat-sub">Referral + direct</div>
+        </div>
+        <div class="stat-card am">
+          <div class="stat-lbl">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            Total Earnings
+          </div>
+          <div class="stat-val" id="stat-earn">—</div>
+          <div class="stat-sub">Confirmed commissions</div>
+        </div>
+        <div class="stat-card ro">
+          <div class="stat-lbl">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg>
+            Conversion Rate
+          </div>
+          <div class="stat-val" id="stat-cvr">—</div>
+          <div class="stat-sub">Clicks → bookings</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN GRID -->
+    <div class="two-col">
+
+      <!-- LEFT -->
+      <div style="display:flex;flex-direction:column;gap:1.5rem">
+
+        <!-- AFFILIATE LINK -->
+        <div class="panel">
+          <div class="eyebrow">Your Referral Link</div>
+          <div class="link-box">
+            <div class="link-text" id="aff-link">Loading…</div>
+            <button class="btn-sm" onclick="copyLink()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy
+            </button>
+          </div>
+          <div class="link-actions">
+            <button class="btn-sec" onclick="openWhatsAppShare()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.65 3.4 2 2 0 0 1 3.62 1h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 8a16 16 0 0 0 6 6l.27-.81a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>Share
+            </button>
+            <button class="btn-sec gld" onclick="openBookingPage()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>Open Client Page
+            </button>
+          </div>
+          <div class="info-box">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#C9A84C" stroke-width="2" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <p>Every visit to your link is tracked in real-time. Bookings made by clients through your link are automatically credited to your account at <strong style="color:var(--gold)">12% commission</strong>.</p>
+          </div>
+        </div>
+
+        <!-- BOOK A CLIENT DIRECTLY -->
+        <div class="panel">
+          <div class="eyebrow">Book a Client Directly</div>
+          <div class="tour-badge">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C9A84C" stroke-width="2" style="flex-shrink:0"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            <div><div class="t">7-Day Iraq Heritage Tour</div><div class="s">Baghdad · Karbala · Najaf · Basra · Samarra · Mosul — $2,500 per person</div></div>
+          </div>
+          <div class="bk-grid">
+            <div class="field"><label>Client Name</label><input type="text" id="bk-name" placeholder="Full name"></div>
+            <div class="field"><label>Email</label><input type="email" id="bk-email" placeholder="client@email.com"></div>
+            <div class="field"><label>WhatsApp</label><input type="tel" id="bk-phone" placeholder="+1 000 000 0000"></div>
+            <div class="field"><label>Travel Date</label><input type="date" id="bk-date"></div>
+            <div class="field full">
+              <label>Number of Travelers</label>
+              <select id="bk-travelers">
+                <option value="1">1 Traveler — $2,500</option>
+                <option value="2">2 Travelers — $5,000</option>
+                <option value="3">3 Travelers — $7,500</option>
+                <option value="4">4 Travelers — $10,000</option>
+                <option value="5">5 Travelers — $12,500</option>
+              </select>
+            </div>
+            <div class="field full"><button class="btn-gold" id="btn-bk" onclick="submitDirectBooking()">Submit Booking</button></div>
+          </div>
+        </div>
+
+      </div><!-- /left -->
+
+      <!-- RIGHT: LEDGER -->
+      <div class="panel" style="display:flex;flex-direction:column">
+        <div class="ledger-hdr">
+          <div class="eyebrow" style="margin-bottom:0;flex:1">Bookings Ledger</div>
+          <div class="live-badge">Live</div>
+        </div>
+        <div class="ledger-scroll">
+          <table class="tbl">
+            <thead><tr>
+              <th>Date</th><th>Client</th><th>Travelers</th><th>Status</th><th>Earnings</th>
+            </tr></thead>
+            <tbody id="ledger-body">
+              <tr><td colspan="5"><div class="tbl-empty">Loading bookings…</div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div><!-- /two-col -->
+  </div><!-- /dash-body -->
+</div><!-- /dash-screen -->
+
+<!-- TOAST -->
+<div class="toast" id="toast"><div class="ti s" id="ti">✓</div><span id="toast-msg">Done</span></div>
+
+<script>
+'use strict';
+
+// ══════════════════════════════════════════════════════
+//  ⚙️  CONFIGURATION — replace with your Supabase values
+// ══════════════════════════════════════════════════════
+const SUPABASE_URL  = 'https://duwjfcoccovuyefapwww.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR1d2pmY29jY292dXllZmFwd3d3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzNzY5NzQsImV4cCI6MjA5Njk1Mjk3NH0.P38NWcfXxeXIwSSqlPKUj-TgPNVVDme7LYJuG2tnlYY';
+const BOOKING_PAGE  = 'https://book.fabletour.com/book-tour.html'; // URL of your book-tour.html
+
+const WEB3_KEY      = 'e9d1132b-a901-4764-af66-b98807d3d918';
+const SUPPORT_EMAIL = 'Support@fabletour.com';
+const COMMISSION    = 0.12;
+const PRICE_PP      = 2500;
+// ══════════════════════════════════════════════════════
+
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_ANON);
+
+let currentAgent  = null;
+let realtimeSub   = null;
+let clicksSub     = null;
+
+// ── UTILS ──────────────────────────────────────────────
+const $  = id => document.getElementById(id);
+const ve = e  => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+function fmtDate(d){ if(!d) return '—'; const dt=new Date(d+'T12:00:00'); return dt.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}); }
+function genCode(name){ const s=name.split(' ')[0].toLowerCase().replace(/[^a-z]/g,'').substring(0,6); return (s+Math.floor(1000+Math.random()*9000)).toUpperCase(); }
+
+function showErr(msg){ const el=$('auth-err'); el.textContent=msg; el.classList.add('show'); }
+function hideErr(){ $('auth-err').classList.remove('show'); }
+
+let toastT;
+function toast(msg,type='s'){ const icons={s:'✓',i:'✦',e:'✕'}; $('ti').className='ti '+type; $('ti').textContent=icons[type]||'✦'; $('toast-msg').textContent=msg; const el=$('toast'); clearTimeout(toastT); el.classList.add('show'); toastT=setTimeout(()=>el.classList.remove('show'),3400); }
+
+function setLoading(btnId, loading, text=''){
+  const b=$(btnId); if(!b) return;
+  if(loading){ b.disabled=true; b.innerHTML='<span class="spinner"></span>'; }
+  else{ b.disabled=false; b.textContent=text; }
+}
+
+// ── AUTH ───────────────────────────────────────────────
+function switchTab(tab){
+  document.querySelectorAll('.tab').forEach((el,i)=>el.classList.toggle('active',tab==='login'?i===0:i===1));
+  $('panel-login').classList.toggle('active',tab==='login');
+  $('panel-signup').classList.toggle('active',tab==='signup');
+  hideErr();
+}
+
+async function handleLogin(){
+  const email=$('li-email').value.trim(), pass=$('li-pass').value;
+  if(!ve(email)||!pass){ showErr('Please enter a valid email and password.'); return; }
+  hideErr(); setLoading('btn-login',true);
+  const { data, error } = await db.auth.signInWithPassword({ email, password: pass });
+  setLoading('btn-login',false,'Access Dashboard');
+  if(error){ showErr(error.message); return; }
+  if(data?.user) await loadAgent(data.user.id);
+}
+
+async function handleSignup(){
+  const name=$('su-name').value.trim(), email=$('su-email').value.trim(),
+        phone=$('su-phone').value.trim(), region=$('su-region').value, pass=$('su-pass').value;
+  if(!name||!ve(email)||!phone||pass.length<8){ showErr('Please complete all fields (password min. 8 characters).'); return; }
+  hideErr(); setLoading('btn-signup',true);
+
+  const { data, error } = await db.auth.signUp({ email, password: pass, options:{ data:{ full_name:name } } });
+  if(error){ setLoading('btn-signup',false,'Create Agent Account'); showErr(error.message); return; }
+
+  const code = genCode(name);
+  await db.from('agents').insert({ id: data.user.id, full_name: name, phone, region, ref_code: code });
+
+  // Notify support
+  sendSupportEmail(
+    '🆕 New Agent Sign-Up — Fable Tour',
+    ['A new affiliate agent has registered.','',' Name   : '+name,' Email  : '+email,' Phone  : '+phone,' Region : '+(region||'—'),'','Please review and welcome them.']
+  );
+  setLoading('btn-signup',false,'Create Agent Account');
+  toast('Account created! Taking you to your dashboard…','s');
+
+  // Directly sign in after signup — no email confirmation redirect
+  const { data: loginData, error: loginErr } = await db.auth.signInWithPassword({ email, password: pass });
+  if(!loginErr && loginData?.user){
+    await loadAgent(loginData.user.id);
+  } else {
+    showErr('Account created! Please sign in with your email and password.');
+    switchTab('login');
+    $('li-email').value = email;
+  }
+}
+
+async function handleLogout(){
+  if(realtimeSub) db.removeChannel(realtimeSub);
+  if(clicksSub)   db.removeChannel(clicksSub);
+  await db.auth.signOut();
+  currentAgent=null;
+  showScreen('auth-screen');
+}
+
+// ── AUTH STATE ─────────────────────────────────────────
+// Only restore session on page load (not on every auth event to avoid loops)
+db.auth.getSession().then(async ({ data: { session } }) => {
+  if(session?.user){
+    await loadAgent(session.user.id);
+  }
+});
+
+async function loadAgent(uid){
+  const { data } = await db.from('agents').select('*').eq('id', uid).single();
+  if(!data){ showScreen('auth-screen'); return; }
+  currentAgent = data;
+  $('agent-name-badge').textContent = data.full_name.split(' ')[0];
+  $('aff-link').textContent = BOOKING_PAGE + '?ref=' + data.ref_code;
+  showScreen('dash-screen');
+  await loadDashboard();
+  subscribeRealtime();
+}
+
+// ── DASHBOARD DATA ─────────────────────────────────────
+async function loadDashboard(){
+  if(!currentAgent) return;
+  const [{ data: bookings }, { count: clicks }] = await Promise.all([
+    db.from('bookings').select('*').eq('agent_id', currentAgent.id).order('created_at',{ascending:false}),
+    db.from('link_clicks').select('*',{count:'exact',head:true}).eq('agent_id', currentAgent.id)
+  ]);
+  renderStats(bookings||[], clicks||0);
+  renderLedger(bookings||[]);
+}
+
+function renderStats(bookings, clicks){
+  const confirmed = bookings.filter(b=>b.status==='confirmed');
+  const totalEarn = confirmed.reduce((s,b)=>s+b.commission,0);
+  const cvr = clicks>0 ? ((bookings.length/clicks)*100).toFixed(1)+'%' : '—';
+  $('stat-clicks').textContent   = clicks.toLocaleString();
+  $('stat-bookings').textContent = bookings.length;
+  $('stat-earn').textContent     = '$'+totalEarn.toLocaleString();
+  $('stat-cvr').textContent      = cvr;
+}
+
+function renderLedger(bookings){
+  const tb = $('ledger-body');
+  if(!bookings.length){
+    tb.innerHTML='<tr><td colspan="5"><div class="tbl-empty">No bookings yet. Share your referral link or add a client above.</div></td></tr>';
+    return;
+  }
+  tb.innerHTML = bookings.map(b=>{
+    const init = b.client_name.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();
+    const sc   = b.status==='confirmed'?'conf':'pend';
+    const sl   = b.status==='confirmed'?'Confirmed':'Pending';
+    const src  = b.source==='referral'?'↗ Referral':'✎ Direct';
+    return `<tr data-id="${b.id}">
+      <td>${fmtDate(b.created_at)}</td>
+      <td><div class="av-wrap"><div class="av">${init}</div><div>
+        <div style="font-size:0.8rem;color:var(--ivory)">${b.client_name}</div>
+        <div style="font-size:0.68rem;color:var(--mist)">${src}</div>
+      </div></div></td>
+      <td style="font-size:0.78rem;color:var(--mist-2)">${b.travelers} pax</td>
+      <td><span class="pill ${sc}">${sl}</span></td>
+      <td><span class="earn">$${b.commission.toLocaleString()}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+// ── REALTIME SUBSCRIPTIONS ─────────────────────────────
+function subscribeRealtime(){
+  if(!currentAgent) return;
+
+  realtimeSub = db.channel('bookings-'+currentAgent.id)
+    .on('postgres_changes',{
+      event:'INSERT', schema:'public', table:'bookings',
+      filter:'agent_id=eq.'+currentAgent.id
+    }, payload => {
+      toast('New booking: '+payload.new.client_name+'!','s');
+      loadDashboard();
+      flashRow(payload.new.id);
+    })
+    .on('postgres_changes',{
+      event:'UPDATE', schema:'public', table:'bookings',
+      filter:'agent_id=eq.'+currentAgent.id
+    }, () => { loadDashboard(); })
+    .subscribe();
+
+  clicksSub = db.channel('clicks-'+currentAgent.id)
+    .on('postgres_changes',{
+      event:'INSERT', schema:'public', table:'link_clicks',
+      filter:'agent_id=eq.'+currentAgent.id
+    }, () => {
+      loadDashboard();
+    })
+    .subscribe();
+}
+
+function flashRow(id){
+  setTimeout(()=>{
+    const row = document.querySelector(`[data-id="${id}"]`);
+    if(row) row.classList.add('new-row');
+  }, 300);
+}
+
+// ── AFFILIATE LINK ─────────────────────────────────────
+function copyLink(){
+  const url = BOOKING_PAGE+'?ref='+currentAgent.ref_code;
+  navigator.clipboard.writeText(url).catch(()=>{
+    // Fallback for browsers that block clipboard
+    const ta = document.createElement('textarea');
+    ta.value = url; ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+  });
+  toast('Link copied! Share: '+url,'s');
+}
+function openWhatsAppShare(){
+  const url = encodeURIComponent(BOOKING_PAGE+'?ref='+currentAgent.ref_code);
+  const msg = encodeURIComponent('Book the 7-Day Iraq Heritage Tour through my link:\n');
+  window.open('https://wa.me/?text='+msg+url,'_blank');
+}
+function openBookingPage(){
+  window.open(BOOKING_PAGE+'?ref='+currentAgent.ref_code,'_blank');
+}
+
+// ── DIRECT BOOKING ─────────────────────────────────────
+async function submitDirectBooking(){
+  if(!currentAgent) return;
+  const name      = $('bk-name').value.trim();
+  const email     = $('bk-email').value.trim();
+  const phone     = $('bk-phone').value.trim();
+  const date      = $('bk-date').value;
+  const travelers = parseInt($('bk-travelers').value)||1;
+  if(!name||!ve(email)){ toast('Please enter client name and valid email.','i'); return; }
+
+  setLoading('btn-bk',true);
+  const total      = travelers * PRICE_PP;
+  const commission = Math.round(total * COMMISSION);
+  const { error } = await db.from('bookings').insert({
+    agent_id:     currentAgent.id,
+    ref_code:     currentAgent.ref_code,
+    source:       'direct',
+    client_name:  name,
+    client_email: email,
+    client_phone: phone,
+    travel_date:  date||null,
+    travelers,
+    total_price:  total,
+    commission,
+    status:       'pending'
+  });
+  setLoading('btn-bk',false,'Submit Booking');
+  if(error){ toast('Error saving booking.','e'); return; }
+
+  ['bk-name','bk-email','bk-phone','bk-date'].forEach(id=>$(id).value='');
+  $('bk-travelers').value='1';
+  toast('Booking submitted for '+name+'.','s');
+
+  sendSupportEmail(
+    '📋 Direct Booking — '+name,
+    ['Agent: '+currentAgent.full_name,'Agent Email: '+currentAgent.id,'Ref Code: '+currentAgent.ref_code,'',
+     'Client: '+name,'Email: '+email,'Phone: '+(phone||'—'),'Date: '+(date||'—'),
+     'Travelers: '+travelers,'Total: $'+total.toLocaleString(),'Commission: $'+commission.toLocaleString()]
+  );
+}
+
+// ── EMAIL (Web3Forms) ──────────────────────────────────
+async function sendSupportEmail(subject, lines){
+  try{
+    await fetch('https://api.web3forms.com/submit',{
+      method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},
+      body:JSON.stringify({ access_key:WEB3_KEY, to:SUPPORT_EMAIL, subject, message:lines.join('\n') })
+    });
+  } catch(_){}
+}
+
+// ── SCREEN SWITCH ──────────────────────────────────────
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  $(id).classList.add('active');
+}
+
+// ── INIT ──────────────────────────────────────────────
+(function(){
+  const today=new Date().toISOString().split('T')[0];
+  const d=$('bk-date'); if(d) d.min=today;
+  ['li-email','li-pass'].forEach(id=>$(id)?.addEventListener('keydown',e=>{if(e.key==='Enter')handleLogin();}));
+  ['su-name','su-email','su-phone','su-pass'].forEach(id=>$(id)?.addEventListener('keydown',e=>{if(e.key==='Enter')handleSignup();}));
+})();
+</script>
+</body>
+</html>

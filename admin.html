@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fable Tour · Admin Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#0B1120;--navy-2:#131C30;--navy-3:#1E2A45;
+  --mist:#8A9BB5;--mist-2:#B8C4D6;--ivory:#F5F0E8;
+  --gold:#C9A84C;--gold-2:#E8C96A;--gold-dim:rgba(201,168,76,0.15);--gold-dim2:rgba(201,168,76,0.08);
+  --emerald:#2ECC8A;--emerald-dim:rgba(46,204,138,0.12);
+  --rose:#E05C7A;--rose-dim:rgba(224,92,122,0.12);
+  --amber:#E8A23A;--amber-dim:rgba(232,162,58,0.12);
+  --w5:rgba(255,255,255,0.05);--w8:rgba(255,255,255,0.08);
+  --w12:rgba(255,255,255,0.12);--w20:rgba(255,255,255,0.20);
+}
+body{font-family:'Inter',sans-serif;background:var(--navy);color:var(--ivory);min-height:100vh}
+
+/* LOGIN */
+#login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;position:relative;overflow:hidden}
+.login-bg{position:absolute;inset:0;background-image:linear-gradient(rgba(201,168,76,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(201,168,76,0.04) 1px,transparent 1px);background-size:60px 60px;pointer-events:none}
+.login-wrap{position:relative;z-index:1;width:100%;max-width:380px;padding:2rem}
+.login-brand{text-align:center;margin-bottom:2rem}
+.brand-mark{display:inline-flex;align-items:center;justify-content:center;width:52px;height:52px;background:var(--gold-dim);border:1px solid rgba(201,168,76,0.3);border-radius:14px;margin-bottom:0.75rem}
+.brand-mark svg{width:26px;height:26px}
+.login-brand h1{font-family:'Cormorant Garamond',serif;font-size:1.9rem;font-weight:300;letter-spacing:0.06em}
+.login-brand h1 em{font-style:italic;color:var(--gold)}
+.login-brand p{font-size:0.72rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--rose);margin-top:0.3rem}
+.login-card{background:var(--navy-2);border:1px solid var(--w12);border-radius:20px;padding:1.75rem;display:flex;flex-direction:column;gap:1rem}
+.field{display:flex;flex-direction:column;gap:0.4rem}
+.field label{font-size:0.72rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--mist)}
+.field input{background:var(--w5);border:1px solid var(--w12);border-radius:10px;padding:0.72rem 0.9rem;color:var(--ivory);font-family:'Inter',sans-serif;font-size:0.875rem;outline:none;transition:border-color 0.2s;width:100%}
+.field input::placeholder{color:var(--mist);opacity:0.55}
+.field input:focus{border-color:rgba(224,92,122,0.5)}
+.btn-admin{background:var(--rose);color:#fff;border:none;border-radius:10px;padding:0.8rem;font-family:'Inter',sans-serif;font-size:0.875rem;font-weight:600;cursor:pointer;transition:all 0.2s;width:100%}
+.btn-admin:hover{opacity:0.9;transform:translateY(-1px)}
+.btn-admin:disabled{opacity:0.6;pointer-events:none}
+.login-err{background:var(--rose-dim);border:1px solid rgba(224,92,122,0.3);border-radius:8px;padding:0.6rem 0.9rem;font-size:0.78rem;color:var(--rose);display:none}
+.login-err.show{display:block}
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* DASHBOARD */
+#admin-screen{display:none;flex-direction:column;min-height:100vh}
+#admin-screen.active{display:flex}
+
+.topbar{background:var(--navy-2);border-bottom:1px solid var(--w8);padding:0 2rem;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.tb-brand{display:flex;align-items:center;gap:0.7rem}
+.tb-mark{width:30px;height:30px;background:var(--rose-dim);border:1px solid rgba(224,92,122,0.25);border-radius:8px;display:flex;align-items:center;justify-content:center}
+.tb-mark svg{width:15px;height:15px}
+.tb-name{font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-weight:400;letter-spacing:0.04em}
+.tb-name em{color:var(--rose);font-style:italic}
+.tb-right{display:flex;align-items:center;gap:0.9rem}
+.admin-tag{background:var(--rose-dim);border:1px solid rgba(224,92,122,0.3);border-radius:20px;padding:0.25rem 0.75rem;font-size:0.72rem;font-weight:600;color:var(--rose);letter-spacing:0.08em;text-transform:uppercase}
+.btn-out{background:transparent;border:1px solid var(--w12);border-radius:8px;padding:0.3rem 0.7rem;font-size:0.8rem;color:var(--mist);font-family:'Inter',sans-serif;cursor:pointer;transition:all 0.2s}
+.btn-out:hover{border-color:var(--w20);color:var(--ivory)}
+
+.dash-body{flex:1;padding:2rem;display:flex;flex-direction:column;gap:1.5rem;max-width:1400px;margin:0 auto;width:100%}
+
+/* EYEBROW */
+.eyebrow{display:flex;align-items:center;gap:0.6rem;font-size:0.7rem;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--rose);margin-bottom:1rem}
+.eyebrow::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(224,92,122,0.3),transparent)}
+
+/* STATS */
+.stats-row{display:grid;grid-template-columns:repeat(5,1fr);gap:1rem}
+.stat-card{background:var(--navy-2);border:1px solid var(--w8);border-radius:14px;padding:1.25rem 1.5rem;position:relative;overflow:hidden;transition:border-color 0.2s}
+.stat-card:hover{border-color:var(--w20)}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;opacity:0;transition:opacity 0.2s}
+.stat-card:hover::before{opacity:1}
+.stat-card.ro::before{background:var(--rose)}
+.stat-card.gd::before{background:var(--gold)}
+.stat-card.em::before{background:var(--emerald)}
+.stat-card.am::before{background:var(--amber)}
+.stat-card.bl::before{background:#60A5FA}
+.stat-lbl{font-size:0.69rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--mist);margin-bottom:0.5rem}
+.stat-val{font-family:'Cormorant Garamond',serif;font-size:2rem;font-weight:600;color:var(--ivory);line-height:1;margin-bottom:0.25rem}
+.stat-sub{font-size:0.69rem;color:var(--mist);opacity:0.7}
+
+/* SEARCH & FILTER */
+.toolbar{display:flex;align-items:center;gap:1rem;margin-bottom:1rem}
+.search-box{flex:1;position:relative}
+.search-box input{width:100%;background:var(--w5);border:1px solid var(--w12);border-radius:10px;padding:0.65rem 1rem 0.65rem 2.5rem;color:var(--ivory);font-family:'Inter',sans-serif;font-size:0.875rem;outline:none;transition:border-color 0.2s}
+.search-box input:focus{border-color:rgba(224,92,122,0.4)}
+.search-box input::placeholder{color:var(--mist);opacity:0.6}
+.search-box svg{position:absolute;left:0.75rem;top:50%;transform:translateY(-50%);color:var(--mist);width:15px;height:15px}
+.filter-btn{background:var(--w5);border:1px solid var(--w12);border-radius:10px;padding:0.65rem 1rem;color:var(--mist);font-family:'Inter',sans-serif;font-size:0.8rem;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;gap:0.4rem;white-space:nowrap}
+.filter-btn.active,.filter-btn:hover{border-color:rgba(224,92,122,0.4);color:var(--rose)}
+.refresh-btn{background:var(--rose-dim);border:1px solid rgba(224,92,122,0.3);border-radius:10px;padding:0.65rem 1rem;color:var(--rose);font-family:'Inter',sans-serif;font-size:0.8rem;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;gap:0.4rem;white-space:nowrap}
+.refresh-btn:hover{background:rgba(224,92,122,0.2)}
+
+/* AGENTS TABLE */
+.panel{background:var(--navy-2);border:1px solid var(--w8);border-radius:16px;overflow:hidden}
+.panel-hdr{padding:1.25rem 1.5rem;border-bottom:1px solid var(--w8);display:flex;align-items:center;justify-content:space-between}
+.panel-hdr h3{font-size:0.8rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--mist)}
+.tbl-wrap{overflow-x:auto}
+table.tbl{width:100%;border-collapse:collapse;font-size:0.8rem;min-width:900px}
+table.tbl thead tr{border-bottom:1px solid var(--w8)}
+table.tbl th{padding:0.9rem 1.25rem;text-align:left;font-size:0.67rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--mist);white-space:nowrap}
+table.tbl tbody tr{border-bottom:1px solid var(--w5);transition:background 0.15s;cursor:pointer}
+table.tbl tbody tr:hover{background:var(--w5)}
+table.tbl tbody tr:last-child{border-bottom:none}
+table.tbl td{padding:1rem 1.25rem;color:var(--ivory);vertical-align:middle}
+
+.agent-cell{display:flex;align-items:center;gap:0.75rem}
+.av{width:34px;height:34px;border-radius:50%;background:var(--gold-dim);border:1px solid rgba(201,168,76,0.2);display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;color:var(--gold);flex-shrink:0}
+.agent-name{font-size:0.85rem;font-weight:500;color:var(--ivory)}
+.agent-code{font-size:0.7rem;color:var(--gold);font-weight:600;letter-spacing:0.05em;background:var(--gold-dim2);padding:0.15rem 0.5rem;border-radius:20px;border:1px solid rgba(201,168,76,0.15)}
+.contact-cell{display:flex;flex-direction:column;gap:0.25rem}
+.contact-email{font-size:0.78rem;color:var(--ivory)}
+.contact-phone{font-size:0.72rem;color:var(--mist)}
+
+.num-cell{font-family:'Cormorant Garamond',serif;font-size:1.35rem;font-weight:600}
+.num-cell.clicks{color:#60A5FA}
+.num-cell.bookings{color:var(--emerald)}
+.num-cell.earn{color:var(--gold)}
+
+.cvr-bar-wrap{display:flex;align-items:center;gap:0.6rem}
+.cvr-bar{flex:1;height:5px;background:var(--w8);border-radius:3px;overflow:hidden;min-width:60px}
+.cvr-fill{height:100%;background:linear-gradient(90deg,var(--emerald),var(--gold));border-radius:3px;transition:width 0.5s}
+.cvr-pct{font-size:0.75rem;color:var(--mist-2);white-space:nowrap}
+
+.pill{display:inline-flex;align-items:center;gap:0.35rem;padding:0.2rem 0.6rem;border-radius:20px;font-size:0.68rem;font-weight:500}
+.pill::before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor}
+.pill.active{background:var(--emerald-dim);color:var(--emerald)}
+.pill.new{background:var(--amber-dim);color:var(--amber)}
+
+.region-tag{font-size:0.72rem;color:var(--mist-2);background:var(--w5);border:1px solid var(--w8);border-radius:6px;padding:0.2rem 0.5rem}
+
+.date-cell{font-size:0.75rem;color:var(--mist)}
+
+.tbl-empty{text-align:center;padding:3rem;color:var(--mist);font-size:0.85rem;opacity:0.6}
+
+/* AGENT DETAIL MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.modal-overlay.active{display:flex}
+.modal{background:var(--navy-2);border:1px solid var(--w20);border-radius:20px;width:100%;max-width:640px;margin:1rem;max-height:90vh;overflow-y:auto;box-shadow:0 40px 80px rgba(0,0,0,0.6)}
+.modal-hdr{padding:1.5rem;border-bottom:1px solid var(--w8);display:flex;align-items:center;justify-content:space-between}
+.modal-hdr h2{font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:300;color:var(--ivory)}
+.modal-close{background:transparent;border:none;color:var(--mist);cursor:pointer;font-size:1.2rem;transition:color 0.2s}
+.modal-close:hover{color:var(--ivory)}
+.modal-body{padding:1.5rem;display:flex;flex-direction:column;gap:1.25rem}
+
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.detail-card{background:var(--w5);border:1px solid var(--w8);border-radius:12px;padding:1rem}
+.detail-lbl{font-size:0.68rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--mist);margin-bottom:0.4rem}
+.detail-val{font-size:0.9rem;color:var(--ivory);font-weight:500}
+.detail-val.big{font-family:'Cormorant Garamond',serif;font-size:1.75rem;font-weight:600}
+.detail-val.gold{color:var(--gold)}
+.detail-val.blue{color:#60A5FA}
+.detail-val.green{color:var(--emerald)}
+
+.modal-ref-link{background:var(--gold-dim2);border:1px solid rgba(201,168,76,0.2);border-radius:10px;padding:0.75rem 1rem;display:flex;align-items:center;gap:0.75rem}
+.ref-link-text{flex:1;font-size:0.78rem;color:var(--gold);word-break:break-all}
+.btn-copy{background:var(--w8);border:1px solid var(--w12);border-radius:7px;padding:0.38rem 0.7rem;color:var(--mist-2);font-family:'Inter',sans-serif;font-size:0.73rem;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:0.35rem;transition:all 0.2s;white-space:nowrap}
+.btn-copy:hover{background:var(--w12);color:var(--ivory)}
+
+/* BOOKINGS IN MODAL */
+.modal-bookings{display:flex;flex-direction:column;gap:0.5rem;max-height:250px;overflow-y:auto}
+.booking-row{background:var(--w5);border:1px solid var(--w8);border-radius:10px;padding:0.75rem 1rem;display:flex;align-items:center;justify-content:space-between;gap:1rem}
+.booking-client{font-size:0.82rem;font-weight:500;color:var(--ivory)}
+.booking-meta{font-size:0.72rem;color:var(--mist);margin-top:2px}
+.booking-earn{font-family:'Cormorant Garamond',serif;font-size:1rem;font-weight:600;color:var(--gold)}
+.booking-status{display:inline-flex;align-items:center;gap:0.35rem;padding:0.18rem 0.55rem;border-radius:20px;font-size:0.67rem;font-weight:500}
+.booking-status::before{content:'';width:4px;height:4px;border-radius:50%;background:currentColor}
+.booking-status.conf{background:var(--emerald-dim);color:var(--emerald)}
+.booking-status.pend{background:var(--amber-dim);color:var(--amber)}
+.no-bookings{text-align:center;padding:1.5rem;color:var(--mist);font-size:0.8rem;opacity:0.6}
+
+/* TOAST */
+.toast{position:fixed;bottom:1.5rem;right:1.5rem;background:var(--navy-2);border:1px solid var(--w20);border-radius:12px;padding:0.9rem 1.2rem;display:flex;align-items:center;gap:0.75rem;font-size:0.8rem;color:var(--ivory);z-index:999;transform:translateY(100px);opacity:0;transition:all 0.35s cubic-bezier(0.34,1.56,0.64,1);max-width:320px;box-shadow:0 8px 32px rgba(0,0,0,0.4);pointer-events:none}
+.toast.show{transform:translateY(0);opacity:1}
+.ti{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.8rem;flex-shrink:0}
+.ti.s{background:var(--emerald-dim);color:var(--emerald)}
+.ti.i{background:var(--gold-dim);color:var(--gold)}
+
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--w12);border-radius:4px}
+@media(max-width:768px){.stats-row{grid-template-columns:1fr 1fr}.detail-grid{grid-template-columns:1fr}.topbar,.dash-body{padding-left:1rem;padding-right:1rem}}
+@media(max-width:480px){.stats-row{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-bg"></div>
+  <div class="login-wrap">
+    <div class="login-brand">
+      <div class="brand-mark">
+        <svg viewBox="0 0 28 28" fill="none"><path d="M14 3L25 8.5V19.5L14 25L3 19.5V8.5L14 3Z" stroke="#E05C7A" stroke-width="1.5"/><path d="M14 8L20 11.5V18.5L14 22L8 18.5V11.5L14 8Z" fill="rgba(224,92,122,0.15)" stroke="#E05C7A" stroke-width="0.75"/><circle cx="14" cy="15" r="2" fill="#E05C7A"/></svg>
+      </div>
+      <h1>Fable <em>Tour</em></h1>
+      <p>Admin Control Panel</p>
+    </div>
+    <div class="login-card">
+      <div class="login-err" id="login-err"></div>
+      <div class="field"><label>Admin Email</label><input type="email" id="a-email" placeholder="admin@fabletour.com" autocomplete="email"></div>
+      <div class="field"><label>Password</label><input type="password" id="a-pass" placeholder="••••••••" autocomplete="current-password"></div>
+      <button class="btn-admin" id="btn-login" onclick="adminLogin()">Access Admin Panel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADMIN DASHBOARD -->
+<div id="admin-screen">
+  <div class="topbar">
+    <div class="tb-brand">
+      <div class="tb-mark">
+        <svg viewBox="0 0 28 28" fill="none"><path d="M14 3L25 8.5V19.5L14 25L3 19.5V8.5L14 3Z" stroke="#E05C7A" stroke-width="1.5"/><circle cx="14" cy="15" r="2" fill="#E05C7A"/></svg>
+      </div>
+      <div class="tb-name">Fable <em>Tour</em> · Admin</div>
+    </div>
+    <div class="tb-right">
+      <div class="admin-tag">Admin</div>
+      <button class="btn-out" onclick="adminLogout()">Sign Out</button>
+    </div>
+  </div>
+
+  <div class="dash-body">
+
+    <!-- STATS -->
+    <div>
+      <div class="eyebrow">Platform Overview</div>
+      <div class="stats-row">
+        <div class="stat-card ro">
+          <div class="stat-lbl">Total Agents</div>
+          <div class="stat-val" id="s-agents">—</div>
+          <div class="stat-sub">Registered affiliates</div>
+        </div>
+        <div class="stat-card bl">
+          <div class="stat-lbl">Total Link Clicks</div>
+          <div class="stat-val" id="s-clicks">—</div>
+          <div class="stat-sub">Across all agents</div>
+        </div>
+        <div class="stat-card em">
+          <div class="stat-lbl">Total Bookings</div>
+          <div class="stat-val" id="s-bookings">—</div>
+          <div class="stat-sub">All sources</div>
+        </div>
+        <div class="stat-card gd">
+          <div class="stat-lbl">Total Revenue</div>
+          <div class="stat-val" id="s-revenue">—</div>
+          <div class="stat-sub">All confirmed bookings</div>
+        </div>
+        <div class="stat-card am">
+          <div class="stat-lbl">Commissions Due</div>
+          <div class="stat-val" id="s-commission">—</div>
+          <div class="stat-sub">Pending payouts</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AGENTS TABLE -->
+    <div class="panel">
+      <div class="panel-hdr">
+        <h3>All Agents</h3>
+        <button class="refresh-btn" onclick="loadData()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+          Refresh
+        </button>
+      </div>
+      <div class="toolbar" style="padding:1rem 1.25rem 0">
+        <div class="search-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="search-input" placeholder="Search by name, email, phone or ref code…" oninput="filterAgents()">
+        </div>
+      </div>
+      <div class="tbl-wrap">
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th>Agent</th>
+              <th>Contact</th>
+              <th>Region</th>
+              <th>Ref Code</th>
+              <th>Link Clicks</th>
+              <th>Bookings</th>
+              <th>Conversion</th>
+              <th>Earnings</th>
+              <th>Joined</th>
+            </tr>
+          </thead>
+          <tbody id="agents-tbody">
+            <tr><td colspan="9"><div class="tbl-empty">Loading agents…</div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- AGENT DETAIL MODAL -->
+<div class="modal-overlay" id="modal-overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-hdr">
+      <h2 id="modal-agent-name">Agent Details</h2>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="detail-grid" id="modal-stats"></div>
+      <div>
+        <div style="font-size:0.7rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--mist);margin-bottom:0.6rem">Referral Link</div>
+        <div class="modal-ref-link">
+          <div class="ref-link-text" id="modal-ref-link"></div>
+          <button class="btn-copy" onclick="copyModalLink()">Copy</button>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:0.7rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--mist);margin-bottom:0.75rem">Bookings</div>
+        <div class="modal-bookings" id="modal-bookings"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"><div class="ti s" id="ti">✓</div><span id="toast-msg">Done</span></div>
+
+<script>
+'use strict';
+
+// ══════════════════════════════════════════════════════
+const SUPABASE_URL  = 'https://duwjfcoccovuyefapwww.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR1d2pmY29jY292dXllZmFwd3d3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzNzY5NzQsImV4cCI6MjA5Njk1Mjk3NH0.P38NWcfXxeXIwSSqlPKUj-TgPNVVDme7LYJuG2tnlYY';
+const BOOKING_PAGE  = 'https://book.fabletour.com/book-tour.html';
+
+// ADMIN CREDENTIALS — change these to your own secure password
+const ADMIN_EMAIL    = 'admin@fabletour.com';
+const ADMIN_PASSWORD = 'FableTour@Admin2025';
+// ══════════════════════════════════════════════════════
+
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_ANON);
+
+let allAgents   = [];
+let allBookings = [];
+let allClicks   = [];
+let currentModalAgent = null;
+
+const $ = id => document.getElementById(id);
+
+// ── TOAST ──────────────────────────────────────────────
+let toastT;
+function toast(msg, type='s'){
+  const icons={s:'✓',i:'✦'};
+  $('ti').className='ti '+type; $('ti').textContent=icons[type]||'✦';
+  $('toast-msg').textContent=msg;
+  const el=$('toast'); clearTimeout(toastT);
+  el.classList.add('show'); toastT=setTimeout(()=>el.classList.remove('show'),3200);
+}
+
+// ── LOGIN ──────────────────────────────────────────────
+async function adminLogin(){
+  const email = $('a-email').value.trim();
+  const pass  = $('a-pass').value;
+  const err   = $('login-err');
+  err.classList.remove('show');
+
+  // Simple admin credential check
+  if(email !== ADMIN_EMAIL || pass !== ADMIN_PASSWORD){
+    err.textContent = 'Invalid admin credentials.';
+    err.classList.add('show');
+    return;
+  }
+
+  const btn = $('btn-login');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>';
+
+  // Sign in with Supabase to get data access
+  const { error } = await db.auth.signInWithPassword({ email, password: pass });
+  btn.disabled = false;
+  btn.textContent = 'Access Admin Panel';
+
+  if(error){
+    // Even if Supabase login fails, allow admin access since RLS is disabled
+    // Just load data directly
+  }
+
+  $('login-screen').style.display = 'none';
+  $('admin-screen').classList.add('active');
+  await loadData();
+}
+
+function adminLogout(){
+  db.auth.signOut();
+  $('login-screen').style.display = 'flex';
+  $('admin-screen').classList.remove('active');
+  $('a-email').value=''; $('a-pass').value='';
+}
+
+['a-email','a-pass'].forEach(id=>{
+  $(id)?.addEventListener('keydown', e=>{ if(e.key==='Enter') adminLogin(); });
+});
+
+// ── LOAD DATA ─────────────────────────────────────────
+async function loadData(){
+  const [
+    { data: agents },
+    { data: bookings },
+    { data: clicks }
+  ] = await Promise.all([
+    db.from('agents').select('*').order('created_at', { ascending: false }),
+    db.from('bookings').select('*').order('created_at', { ascending: false }),
+    db.from('link_clicks').select('agent_id')
+  ]);
+
+  allAgents   = agents   || [];
+  allBookings = bookings || [];
+  allClicks   = clicks   || [];
+
+  renderStats();
+  renderAgents(allAgents);
+}
+
+// ── STATS ─────────────────────────────────────────────
+function renderStats(){
+  const confirmedBookings = allBookings.filter(b=>b.status==='confirmed');
+  const totalRevenue      = confirmedBookings.reduce((s,b)=>s+(b.total_price||0),0);
+  const totalCommission   = allBookings.filter(b=>b.status!=='confirmed').reduce((s,b)=>s+(b.commission||0),0);
+
+  $('s-agents').textContent    = allAgents.length;
+  $('s-clicks').textContent    = allClicks.length.toLocaleString();
+  $('s-bookings').textContent  = allBookings.length;
+  $('s-revenue').textContent   = '$'+totalRevenue.toLocaleString();
+  $('s-commission').textContent= '$'+totalCommission.toLocaleString();
+}
+
+// ── RENDER AGENTS TABLE ───────────────────────────────
+function renderAgents(agents){
+  const tb = $('agents-tbody');
+  if(!agents.length){
+    tb.innerHTML='<tr><td colspan="9"><div class="tbl-empty">No agents found.</div></td></tr>';
+    return;
+  }
+  tb.innerHTML = agents.map(agent => {
+    const clicks   = allClicks.filter(c=>c.agent_id===agent.id).length;
+    const bookings = allBookings.filter(b=>b.agent_id===agent.id);
+    const earnings = bookings.filter(b=>b.status==='confirmed').reduce((s,b)=>s+(b.commission||0),0);
+    const cvr      = clicks>0 ? Math.round((bookings.length/clicks)*100) : 0;
+    const joined   = new Date(agent.created_at).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+    const init     = agent.full_name.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();
+    const isNew    = (Date.now()-new Date(agent.created_at).getTime()) < 7*24*60*60*1000;
+
+    return `<tr onclick="openModal('${agent.id}')">
+      <td>
+        <div class="agent-cell">
+          <div class="av">${init}</div>
+          <div>
+            <div class="agent-name">${agent.full_name}</div>
+            <span class="pill ${isNew?'new':'active'}">${isNew?'New':'Active'}</span>
+          </div>
+        </div>
+      </td>
+      <td>
+        <div class="contact-cell">
+          <div class="contact-email">${agent.id}</div>
+          <div class="contact-phone">${agent.phone||'—'}</div>
+        </div>
+      </td>
+      <td><span class="region-tag">${agent.region||'—'}</span></td>
+      <td><span class="agent-code">${agent.ref_code}</span></td>
+      <td><span class="num-cell clicks">${clicks.toLocaleString()}</span></td>
+      <td><span class="num-cell bookings">${bookings.length}</span></td>
+      <td>
+        <div class="cvr-bar-wrap">
+          <div class="cvr-bar"><div class="cvr-fill" style="width:${Math.min(cvr,100)}%"></div></div>
+          <span class="cvr-pct">${cvr}%</span>
+        </div>
+      </td>
+      <td><span class="num-cell earn">$${earnings.toLocaleString()}</span></td>
+      <td><span class="date-cell">${joined}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+// ── SEARCH ────────────────────────────────────────────
+function filterAgents(){
+  const q = $('search-input').value.toLowerCase().trim();
+  if(!q){ renderAgents(allAgents); return; }
+  const filtered = allAgents.filter(a=>
+    a.full_name.toLowerCase().includes(q) ||
+    (a.id||'').toLowerCase().includes(q) ||
+    (a.phone||'').toLowerCase().includes(q) ||
+    (a.ref_code||'').toLowerCase().includes(q) ||
+    (a.region||'').toLowerCase().includes(q)
+  );
+  renderAgents(filtered);
+}
+
+// ── MODAL ─────────────────────────────────────────────
+function openModal(agentId){
+  const agent    = allAgents.find(a=>a.id===agentId);
+  if(!agent) return;
+  currentModalAgent = agent;
+
+  const clicks   = allClicks.filter(c=>c.agent_id===agent.id).length;
+  const bookings = allBookings.filter(b=>b.agent_id===agent.id);
+  const confirmed= bookings.filter(b=>b.status==='confirmed');
+  const earnings = confirmed.reduce((s,b)=>s+(b.commission||0),0);
+  const pending  = bookings.filter(b=>b.status!=='confirmed').reduce((s,b)=>s+(b.commission||0),0);
+  const cvr      = clicks>0 ? ((bookings.length/clicks)*100).toFixed(1)+'%' : '—';
+  const refLink  = BOOKING_PAGE+'?ref='+agent.ref_code;
+
+  $('modal-agent-name').textContent = agent.full_name;
+  $('modal-ref-link').textContent   = refLink;
+
+  $('modal-stats').innerHTML = `
+    <div class="detail-card"><div class="detail-lbl">Full Name</div><div class="detail-val">${agent.full_name}</div></div>
+    <div class="detail-card"><div class="detail-lbl">Email</div><div class="detail-val" style="font-size:0.8rem;word-break:break-all">${agent.id}</div></div>
+    <div class="detail-card"><div class="detail-lbl">WhatsApp / Phone</div><div class="detail-val">${agent.phone||'—'}</div></div>
+    <div class="detail-card"><div class="detail-lbl">Region</div><div class="detail-val">${agent.region||'—'}</div></div>
+    <div class="detail-card"><div class="detail-lbl">Ref Code</div><div class="detail-val gold">${agent.ref_code}</div></div>
+    <div class="detail-card"><div class="detail-lbl">Joined</div><div class="detail-val">${new Date(agent.created_at).toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'})}</div></div>
+    <div class="detail-card"><div class="detail-lbl">Link Clicks</div><div class="detail-val big blue">${clicks.toLocaleString()}</div></div>
+    <div class="detail-card"><div class="detail-lbl">Total Bookings</div><div class="detail-val big green">${bookings.length}</div></div>
+    <div class="detail-card"><div class="detail-lbl">Conversion Rate</div><div class="detail-val big gold">${cvr}</div></div>
+    <div class="detail-card"><div class="detail-lbl">Confirmed Earnings</div><div class="detail-val big gold">$${earnings.toLocaleString()}</div></div>
+    <div class="detail-card"><div class="detail-lbl">Pending Commission</div><div class="detail-val" style="color:var(--amber);font-size:1.4rem;font-family:'Cormorant Garamond',serif;font-weight:600">$${pending.toLocaleString()}</div></div>
+    <div class="detail-card"><div class="detail-lbl">Total Revenue Generated</div><div class="detail-val big" style="color:var(--ivory)">$${bookings.reduce((s,b)=>s+(b.total_price||0),0).toLocaleString()}</div></div>
+  `;
+
+  $('modal-bookings').innerHTML = bookings.length ? bookings.map(b=>`
+    <div class="booking-row">
+      <div>
+        <div class="booking-client">${b.client_name}</div>
+        <div class="booking-meta">${b.client_email} · ${b.travelers||1} pax · ${b.travel_date||'—'}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:0.75rem;flex-shrink:0">
+        <span class="booking-status ${b.status==='confirmed'?'conf':'pend'}">${b.status==='confirmed'?'Confirmed':'Pending'}</span>
+        <span class="booking-earn">$${(b.commission||0).toLocaleString()}</span>
+      </div>
+    </div>`).join('') :
+    '<div class="no-bookings">No bookings yet for this agent.</div>';
+
+  $('modal-overlay').classList.add('active');
+}
+
+function closeModal(){ $('modal-overlay').classList.remove('active'); }
+
+function copyModalLink(){
+  if(!currentModalAgent) return;
+  const url = BOOKING_PAGE+'?ref='+currentModalAgent.ref_code;
+  navigator.clipboard.writeText(url).catch(()=>{});
+  toast('Referral link copied!','s');
+}
+</script>
+</body>
+</html>
